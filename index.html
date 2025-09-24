@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Kehadiran PK-IMM Averroes FT-UMS</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-graduation-cap"></i> Sistem Kehadiran</h1>
+            <h2>PK-IMM Averroes Fakultas Teknik UMS</h2>
+        </header>
+
+        <nav class="tab-nav">
+            <button class="tab-btn active" onclick="showTab('absensi')">
+                <i class="fas fa-user-check"></i> Absensi
+            </button>
+            <button class="tab-btn" onclick="showTab('registrasi')">
+                <i class="fas fa-user-plus"></i> Registrasi
+            </button>
+            <button class="tab-btn" onclick="showTab('riwayat')">
+                <i class="fas fa-history"></i> Riwayat
+            </button>
+            <button class="tab-btn" onclick="showTab('anggota')">
+                <i class="fas fa-users"></i> Daftar Anggota
+            </button>
+        </nav>
+
+        <!-- Tab Absensi -->
+        <div id="absensi" class="tab-content active">
+            <div class="card">
+                <h3><i class="fas fa-clock"></i> Absensi Kehadiran</h3>
+                <div class="form-group">
+                    <label for="nimAbsensi">NIM/ID:</label>
+                    <input type="text" id="nimAbsensi" placeholder="Masukkan NIM atau ID Anda">
+                </div>
+                <div class="form-group">
+                    <label for="namaAbsensi">Nama:</label>
+                    <input type="text" id="namaAbsensi" placeholder="Nama akan terisi otomatis" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="jenisKegiatan">Jenis Kegiatan:</label>
+                    <select id="jenisKegiatan">
+                        <option value="">Pilih Kegiatan</option>
+                        <option value="Kajian Rutin">Kajian Rutin</option>
+                        <option value="Rapat Pengurus">Rapat Pengurus</option>
+                        <option value="Pelatihan">Pelatihan</option>
+                        <option value="Seminar">Seminar</option>
+                        <option value="Lainnya">Lainnya</option>
+                    </select>
+                </div>
+                <div class="button-group">
+                    <button class="btn btn-masuk" onclick="absenMasuk()">
+                        <i class="fas fa-sign-in-alt"></i> Absen Masuk
+                    </button>
+                    <button class="btn btn-keluar" onclick="absenKeluar()">
+                        <i class="fas fa-sign-out-alt"></i> Absen Keluar
+                    </button>
+                </div>
+                <div id="statusAbsensi" class="status-message"></div>
+            </div>
+        </div>
+
+        <!-- Tab Registrasi -->
+        <div id="registrasi" class="tab-content">
+            <div class="card">
+                <h3><i class="fas fa-user-plus"></i> Registrasi Anggota Baru</h3>
+                <form id="formRegistrasi">
+                    <div class="form-group">
+                        <label for="nimReg">NIM/ID:</label>
+                        <input type="text" id="nimReg" required placeholder="Masukkan NIM atau ID">
+                    </div>
+                    <div class="form-group">
+                        <label for="namaReg">Nama Lengkap:</label>
+                        <input type="text" id="namaReg" required placeholder="Masukkan nama lengkap">
+                    </div>
+                    <div class="form-group">
+                        <label for="fakultasReg">Fakultas:</label>
+                        <select id="fakultasReg" required>
+                            <option value="">Pilih Fakultas</option>
+                            <option value="Fakultas Teknik">Fakultas Teknik</option>
+                            <option value="Fakultas Kedokteran">Fakultas Kedokteran</option>
+                            <option value="Fakultas Ekonomi">Fakultas Ekonomi</option>
+                            <option value="Fakultas Hukum">Fakultas Hukum</option>
+                            <option value="Fakultas FKIP">Fakultas FKIP</option>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="prodiReg">Program Studi:</label>
+                        <input type="text" id="prodiReg" required placeholder="Masukkan program studi">
+                    </div>
+                    <div class="form-group">
+                        <label for="angkatanReg">Angkatan:</label>
+                        <input type="number" id="angkatanReg" required placeholder="Contoh: 2023" min="2000" max="2030">
+                    </div>
+                    <div class="form-group">
+                        <label for="kontakReg">Kontak (WhatsApp):</label>
+                        <input type="tel" id="kontakReg" placeholder="Contoh: 081234567890">
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Daftar
+                    </button>
+                </form>
+                <div id="statusRegistrasi" class="status-message"></div>
+            </div>
+        </div>
+
+        <!-- Tab Riwayat -->
+        <div id="riwayat" class="tab-content">
+            <div class="card">
+                <h3><i class="fas fa-history"></i> Riwayat Kehadiran</h3>
+                <div class="form-group">
+                    <label for="nimRiwayat">NIM/ID untuk melihat riwayat:</label>
+                    <input type="text" id="nimRiwayat" placeholder="Masukkan NIM atau ID">
+                    <button class="btn btn-secondary" onclick="tampilkanRiwayat()">
+                        <i class="fas fa-search"></i> Cari
+                    </button>
+                </div>
+                <div id="daftarRiwayat" class="riwayat-container"></div>
+            </div>
+        </div>
+
+        <!-- Tab Daftar Anggota -->
+        <div id="anggota" class="tab-content">
+            <div class="card">
+                <h3><i class="fas fa-users"></i> Daftar Anggota Terdaftar</h3>
+                <div class="search-box">
+                    <input type="text" id="cariAnggota" placeholder="Cari anggota..." onkeyup="cariAnggota()">
+                    <i class="fas fa-search"></i>
+                </div>
+                <div id="daftarAnggota" class="anggota-container"></div>
+                <div class="stats">
+                    <div class="stat-item">
+                        <span class="stat-number" id="totalAnggota">0</span>
+                        <span class="stat-label">Total Anggota</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer>
+            <p>&copy; 2024 PK-IMM Averroes Fakultas Teknik UMS</p>
+            <p><i class="fas fa-heart"></i> Dibuat untuk kemudahan absensi kegiatan</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
