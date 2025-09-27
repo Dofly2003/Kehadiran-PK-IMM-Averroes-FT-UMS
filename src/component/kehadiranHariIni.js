@@ -10,36 +10,38 @@ const AbsensiHariIni = () => {
   const [users, setUsers] = useState({});
   const [absensiHariIni, setAbsensiHariIni] = useState({});
 
-  // Format tanggal hari ini
+  // Format tanggal hari ini (YYYY-MM-DD)
   const today = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
+    // Ambil data user (master data)
     const usersRef = ref(db, "users/");
     onValue(usersRef, (snapshot) => {
       const val = snapshot.val();
       if (val) setUsers(val);
     });
 
-    const absensiRef = ref(db, "absensi/");
+    // Ambil data absensi hari ini
+    const absensiRef = ref(db, `absensi/${today}`);
     onValue(absensiRef, (snapshot) => {
       const val = snapshot.val();
       if (val) {
-        const todayData = {};
-        Object.entries(val).forEach(([id, item]) => {
-          if (item.waktu?.startsWith(today)) {
-            todayData[id] = item;
-          }
-        });
-        setAbsensiHariIni(todayData);
+        setAbsensiHariIni(val);
+      } else {
+        setAbsensiHariIni({});
       }
     });
-  }, []);
+  }, [today]);
 
-  const hadirUIDs = Object.values(absensiHariIni).map((row) => row.uid);
+  // List UID yang sudah hadir
+  const hadirUIDs = Object.keys(absensiHariIni);
 
-  const sudahHadir = Object.entries(users)
-    .filter(([uid]) => hadirUIDs.includes(uid))
-    .map(([uid, user]) => ({ uid, ...user }));
+  // Join data absensi dengan data user
+  const sudahHadir = hadirUIDs.map((uid) => ({
+    uid,
+    ...(users[uid] || {}), // join ke data user (jika ada)
+    waktu: absensiHariIni[uid]?.waktu || "-",
+  }));
 
   const belumHadir = Object.entries(users)
     .filter(([uid]) => !hadirUIDs.includes(uid))
@@ -53,9 +55,10 @@ const AbsensiHariIni = () => {
     const sudahSheet = XLSX.utils.json_to_sheet(
       sudahHadir.map((row) => ({
         UID: row.uid,
-        Nama: row.nama,
-        NIM: row.nim,
-        Bidang: row.bidang,
+        Nama: row.nama || "-",
+        NIM: row.nim || "-",
+        Bidang: row.bidang || "-",
+        Waktu: row.waktu || "-",
       }))
     );
     XLSX.utils.book_append_sheet(workbook, sudahSheet, "Sudah Hadir");
@@ -101,13 +104,14 @@ const AbsensiHariIni = () => {
                   <th>UID</th>
                   <th>Nama</th>
                   <th>NIM</th>
-                  <th>Prodi</th>
+                  <th>Bidang</th>
+                  <th>Waktu</th>
                 </tr>
               </thead>
               <tbody>
                 {sudahHadir.length === 0 ? (
                   <tr>
-                    <td colSpan="4" className="text-center text-muted fst-italic">
+                    <td colSpan="5" className="text-center text-muted fst-italic">
                       Belum ada yang absen
                     </td>
                   </tr>
@@ -115,9 +119,10 @@ const AbsensiHariIni = () => {
                   sudahHadir.map((row) => (
                     <tr key={row.uid}>
                       <td>{row.uid}</td>
-                      <td className="fw-semibold">{row.nama}</td>
-                      <td>{row.nim}</td>
-                      <td>{row.bidang}</td>
+                      <td className="fw-semibold">{row.nama || "-"}</td>
+                      <td>{row.nim || "-"}</td>
+                      <td>{row.bidang || "-"}</td>
+                      <td>{row.waktu}</td>
                     </tr>
                   ))
                 )}

@@ -14,40 +14,51 @@ const AbsensiList = () => {
     bidang: "",
   });
 
-  // Ambil data absensi
-  // Ambil data absensi
-useEffect(() => {
-  const absensiRef = ref(db, "absensi/");
-  onValue(absensiRef, (snapshot) => {
-    const val = snapshot.val();
-    if (val) {
-      // Ubah ke array
-      let arr = Object.entries(val).map(([id, item]) => ({
-        id,
-        ...item,
-      }));
+  // Ambil data absensi dari struktur baru (tahun/bulan/minggu/hari/uid)
+  useEffect(() => {
+    const absensiRef = ref(db, "absensi/");
+    onValue(absensiRef, (snapshot) => {
+      const val = snapshot.val();
+      if (val) {
+        const arr = [];
 
-      // Ambil hanya absensi terakhir per UID
-      const latestPerUID = {};
-      arr.forEach((row) => {
-        if (
-          !latestPerUID[row.uid] || 
-          new Date(row.waktu) > new Date(latestPerUID[row.uid].waktu)
-        ) {
-          latestPerUID[row.uid] = row;
-        }
-      });
+        // Loop ke dalam folder tahun → bulan → minggu → hari → uid
+        Object.entries(val).forEach(([tahun, bulanObj]) => {
+          Object.entries(bulanObj).forEach(([bulan, mingguObj]) => {
+            Object.entries(mingguObj).forEach(([minggu, hariObj]) => {
+              Object.entries(hariObj).forEach(([hari, uidObj]) => {
+                Object.entries(uidObj).forEach(([uid, item]) => {
+                  arr.push({
+                    id: `${tahun}-${bulan}-${minggu}-${hari}-${uid}`,
+                    uid,
+                    waktu: item.waktu,
+                  });
+                });
+              });
+            });
+          });
+        });
 
-      // Konversi lagi ke array & sort by waktu terbaru
-      const uniqueArr = Object.values(latestPerUID).sort(
-        (a, b) => new Date(b.waktu) - new Date(a.waktu)
-      );
+        // Ambil hanya absensi terakhir per UID
+        const latestPerUID = {};
+        arr.forEach((row) => {
+          if (
+            !latestPerUID[row.uid] ||
+            new Date(row.waktu) > new Date(latestPerUID[row.uid].waktu)
+          ) {
+            latestPerUID[row.uid] = row;
+          }
+        });
 
-      setData(uniqueArr);
-    }
-  });
-}, []);
+        // Konversi ke array lagi & urutkan berdasarkan waktu terbaru
+        const uniqueArr = Object.values(latestPerUID).sort(
+          (a, b) => new Date(b.waktu) - new Date(a.waktu)
+        );
 
+        setData(uniqueArr);
+      }
+    });
+  }, []);
 
   // Ambil data users
   useEffect(() => {
