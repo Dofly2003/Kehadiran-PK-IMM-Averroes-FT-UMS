@@ -1,4 +1,3 @@
-// src/components/AbsensiHariIni.js
 import React, { useEffect, useState } from "react";
 import { db } from "../firebase";
 import { ref, onValue } from "firebase/database";
@@ -6,12 +5,23 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 
+// Helper: cari minggu ke berapa
+function getWeekOfMonth(day) {
+  return "minggu-" + (Math.floor((day - 1) / 7) + 1);
+}
+
 const AbsensiHariIni = () => {
   const [users, setUsers] = useState({});
   const [absensiHariIni, setAbsensiHariIni] = useState({});
 
-  // Format tanggal hari ini (YYYY-MM-DD)
-  const today = new Date().toISOString().split("T")[0];
+  // Ambil info tanggal sekarang
+  const now = new Date();
+  const tahun = now.getFullYear();
+  const bulan = String(now.getMonth() + 1).padStart(2, "0");
+  const hari = String(now.getDate()).padStart(2, "0");
+  const minggu = getWeekOfMonth(now.getDate());
+
+  const todayPath = `absensi/${tahun}/${bulan}/${minggu}/${hari}`;
 
   useEffect(() => {
     // Ambil data user (master data)
@@ -22,7 +32,7 @@ const AbsensiHariIni = () => {
     });
 
     // Ambil data absensi hari ini
-    const absensiRef = ref(db, `absensi/${today}`);
+    const absensiRef = ref(db, todayPath);
     onValue(absensiRef, (snapshot) => {
       const val = snapshot.val();
       if (val) {
@@ -31,17 +41,20 @@ const AbsensiHariIni = () => {
         setAbsensiHariIni({});
       }
     });
-  }, [today]);
+  }, [todayPath]);
 
   // List UID yang sudah hadir
   const hadirUIDs = Object.keys(absensiHariIni);
 
   // Join data absensi dengan data user
-  const sudahHadir = hadirUIDs.map((uid) => ({
+  let sudahHadir = hadirUIDs.map((uid) => ({
     uid,
     ...(users[uid] || {}), // join ke data user (jika ada)
     waktu: absensiHariIni[uid]?.waktu || "-",
   }));
+
+  // Urutkan supaya yang terbaru naik ke atas
+  sudahHadir.sort((a, b) => (a.waktu < b.waktu ? 1 : -1));
 
   const belumHadir = Object.entries(users)
     .filter(([uid]) => !hadirUIDs.includes(uid))
@@ -80,14 +93,16 @@ const AbsensiHariIni = () => {
       type: "array",
     });
     const data = new Blob([excelBuffer], { type: "application/octet-stream" });
-    saveAs(data, `Absensi_${today}.xlsx`);
+    saveAs(data, `Absensi_${tahun}-${bulan}-${hari}.xlsx`);
   };
 
   return (
     <div className="container mt-5">
       <div className="text-center mb-4">
         <h2 className="fw-bold">Absensi Hari Ini</h2>
-        <p className="text-muted">{today}</p>
+        <p className="text-muted">
+          {tahun}-{bulan}-{hari} ({minggu})
+        </p>
         <button className="btn btn-success" onClick={exportToExcel}>
           📥 Download Excel
         </button>
