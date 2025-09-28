@@ -11,9 +11,9 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<AbsensiHariIni />} />
-        <Route path="/TambahMember" element={<AbsensiList />} />
-        <Route path="/logAbsen" element={<LogAbsen />} />
-        <Route path="/Absensi/:tanggal" element={<AbsenPerTanggal />} />
+        <Route path="/tambah-member" element={<AbsensiList />} />
+        <Route path="/log-absen" element={<LogAbsen />} />
+        <Route path="/absensi/:tanggal" element={<AbsenPerTanggal />} />
       </Routes>
     </Router>
   );

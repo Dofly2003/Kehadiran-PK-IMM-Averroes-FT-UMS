@@ -4,7 +4,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 
 const FIREBASE_URL =
-  "https://absensi-organisasi-default-rtdb.asia-southeast1.firebasedatabase.app/absensi.json";
+  "https://absensi-organisasi-default-rtdb.asia-southeast1.firebasedatabase.app";
 
 // Fungsi ambil nama hari
 const getDayName = (dateStr) => {
@@ -24,17 +24,24 @@ const formatDate = (dateStr) => {
 
 const AbsensiLog = () => {
   const [data, setData] = useState({});
+  const [users, setUsers] = useState({});
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch(FIREBASE_URL);
+        // Ambil absensi
+        const res = await fetch(`${FIREBASE_URL}/absensi.json`);
         const json = await res.json();
+
+        // Ambil users
+        const resUsers = await fetch(`${FIREBASE_URL}/users.json`);
+        const jsonUsers = await resUsers.json();
+        if (jsonUsers) setUsers(jsonUsers);
 
         if (json) {
           const formatted = [];
 
-          // Traverse struktur Firebase
+          // Traverse struktur Firebase absensi
           Object.keys(json).forEach((tahun) => {
             Object.keys(json[tahun]).forEach((bulan) => {
               Object.keys(json[tahun][bulan]).forEach((minggu) => {
@@ -42,10 +49,9 @@ const AbsensiLog = () => {
                   const uids = json[tahun][bulan][minggu][hari];
                   Object.keys(uids).forEach((uid) => {
                     formatted.push({
-                      id: uid,
+                      id: uid + "-" + uids[uid].waktu,
                       uid: uids[uid].uid,
                       waktu: uids[uid].waktu,
-                      device: uids[uid].device,
                       tanggal: `${tahun}-${bulan}-${hari}`, // yyyy-mm-dd
                     });
                   });
@@ -73,12 +79,15 @@ const AbsensiLog = () => {
 
   // Download Excel khusus 1 hari
   const downloadExcelPerHari = (tanggal) => {
-    const rows = data[tanggal].map((row) => ({
-      tanggal,
-      uid: row.uid,
-      waktu: row.waktu,
-      device: row.device,
-    }));
+    const rows = data[tanggal].map((row) => {
+      const user = users[row.uid] || {};
+      return {
+        tanggal,
+        nama: user.nama || "Belum Terdaftar",
+        bidang: user.bidang || "-",
+        waktu: row.waktu,
+      };
+    });
     const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Absensi");
@@ -136,19 +145,22 @@ const AbsensiLog = () => {
                     <table className="table table-striped table-bordered mb-0">
                       <thead className="table-dark">
                         <tr>
-                          <th>UID</th>
+                          <th>Nama</th>
+                          <th>Bidang</th>
                           <th>Waktu</th>
-                          <th>Device</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {rows.map((row) => (
-                          <tr key={row.id}>
-                            <td>{row.uid}</td>
-                            <td>{row.waktu}</td>
-                            <td>{row.device}</td>
-                          </tr>
-                        ))}
+                        {rows.map((row) => {
+                          const user = users[row.uid] || {};
+                          return (
+                            <tr key={row.id}>
+                              <td>{user.nama || "Belum Terdaftar"}</td>
+                              <td>{user.bidang || "-"}</td>
+                              <td>{row.waktu}</td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
