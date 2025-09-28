@@ -1,3 +1,4 @@
+// src/components/AbsensiLog.js
 import React, { useEffect, useState } from "react";
 import * as XLSX from "xlsx";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -95,79 +96,98 @@ const AbsensiLog = () => {
   };
 
   return (
-    <div className="container py-4">
-      <h2 className="mb-3 text-center">📑 Log Absensi Harian</h2>
+    <div
+      className="min-vh-100 py-4"
+      style={{
+        background: "linear-gradient(135deg, #f8f9fa, #e9ecef)",
+      }}
+    >
+      <div className="container">
+        <div className="text-center mb-4">
+          <h2 className="fw-bold text-primary">📑 Log Absensi Harian</h2>
+          <p className="text-muted">
+            Data absensi mahasiswa tersimpan berdasarkan tanggal
+          </p>
+        </div>
 
-      {Object.keys(data).length === 0 && (
-        <div className="alert alert-info">Belum ada data absensi.</div>
-      )}
+        {Object.keys(data).length === 0 && (
+          <div className="alert alert-info shadow-sm text-center">
+            Belum ada data absensi.
+          </div>
+        )}
 
-      <div className="accordion" id="accordionAbsensi">
-        {Object.keys(data)
-          .sort()
-          .reverse()
-          .map((tanggal, index) => {
-            const rows = data[tanggal];
-            const dayName = getDayName(tanggal);
-            const formattedDate = formatDate(tanggal);
-            const collapseId = `collapse-${index}`;
-            const headingId = `heading-${index}`;
+        <div className="accordion" id="accordionAbsensi">
+          {Object.keys(data)
+            .sort()
+            .reverse()
+            .map((tanggal, index) => {
+              const rows = data[tanggal];
+              const dayName = getDayName(tanggal);
+              const formattedDate = formatDate(tanggal);
+              const collapseId = `collapse-${index}`;
+              const headingId = `heading-${index}`;
 
-            return (
-              <div className="accordion-item" key={tanggal}>
-                <h2 className="accordion-header" id={headingId}>
-                  <button
-                    className="accordion-button collapsed"
-                    type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target={`#${collapseId}`}
-                    aria-expanded="false"
-                    aria-controls={collapseId}
+              return (
+                <div className="accordion-item shadow-sm mb-3" key={tanggal}>
+                  <h2 className="accordion-header" id={headingId}>
+                    <button
+                      className="accordion-button collapsed fw-semibold"
+                      type="button"
+                      data-bs-toggle="collapse"
+                      data-bs-target={`#${collapseId}`}
+                      aria-expanded="false"
+                      aria-controls={collapseId}
+                    >
+                      📅 {dayName}, {formattedDate}{" "}
+                      <span className="badge bg-primary ms-2">
+                        {rows.length} orang
+                      </span>
+                    </button>
+                  </h2>
+                  <div
+                    id={collapseId}
+                    className="accordion-collapse collapse"
+                    aria-labelledby={headingId}
+                    data-bs-parent="#accordionAbsensi"
                   >
-                    📅 {dayName}, {formattedDate} ({rows.length} orang)
-                  </button>
-                </h2>
-                <div
-                  id={collapseId}
-                  className="accordion-collapse collapse"
-                  aria-labelledby={headingId}
-                  data-bs-parent="#accordionAbsensi"
-                >
-                  <div className="accordion-body p-0">
-                    <div className="d-flex justify-content-end p-2">
-                      <button
-                        className="btn btn-sm btn-success"
-                        onClick={() => downloadExcelPerHari(tanggal)}
-                      >
-                        ⬇ Download Excel Hari Ini
-                      </button>
-                    </div>
-                    <table className="table table-striped table-bordered mb-0">
-                      <thead className="table-dark">
-                        <tr>
-                          <th>Nama</th>
-                          <th>Bidang</th>
-                          <th>Waktu</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {rows.map((row) => {
-                          const user = users[row.uid] || {};
-                          return (
-                            <tr key={row.id}>
-                              <td>{user.nama || "Belum Terdaftar"}</td>
-                              <td>{user.bidang || "-"}</td>
-                              <td>{row.waktu}</td>
+                    <div className="accordion-body p-0">
+                      <div className="d-flex justify-content-end p-3">
+                        <button
+                          className="btn btn-success btn-sm shadow-sm"
+                          onClick={() => downloadExcelPerHari(tanggal)}
+                        >
+                          ⬇ Download Excel Hari Ini
+                        </button>
+                      </div>
+                      <div className="table-responsive">
+                        <table className="table table-striped table-hover table-bordered mb-0">
+                          <thead className="table-dark">
+                            <tr>
+                              <th>Nama</th>
+                              <th>Bidang</th>
+                              <th>Waktu</th>
                             </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
+                          </thead>
+                          <tbody>
+                            {rows.map((row) => {
+                              const user = users[row.uid] || {};
+                              return (
+                                <tr key={row.id}>
+                                  <td>{user.nama || "Belum Terdaftar"}</td>
+                                  <td>{user.bidang || "-"}</td>
+                                  <td>{row.waktu}</td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+        </div>
       </div>
     </div>
   );

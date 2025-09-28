@@ -1,3 +1,4 @@
+// src/components/AbsensiHariIni.js
 import React, { useEffect, useState } from "react";
 import { db } from "../firebase";
 import { ref, onValue } from "firebase/database";
@@ -24,7 +25,7 @@ const AbsensiHariIni = () => {
   const todayPath = `absensi/${tahun}/${bulan}/${minggu}/${hari}`;
 
   useEffect(() => {
-    // Ambil data user (master data)
+    // Ambil data user
     const usersRef = ref(db, "users/");
     onValue(usersRef, (snapshot) => {
       const val = snapshot.val();
@@ -43,17 +44,14 @@ const AbsensiHariIni = () => {
     });
   }, [todayPath]);
 
-  // List UID yang sudah hadir
   const hadirUIDs = Object.keys(absensiHariIni);
 
-  // Join data absensi dengan data user
   let sudahHadir = hadirUIDs.map((uid) => ({
     uid,
-    ...(users[uid] || {}), // join ke data user (jika ada)
+    ...(users[uid] || {}),
     waktu: absensiHariIni[uid]?.waktu || "-",
   }));
 
-  // Urutkan supaya yang terbaru naik ke atas
   sudahHadir.sort((a, b) => (a.waktu < b.waktu ? 1 : -1));
 
   const belumHadir = Object.entries(users)
@@ -64,7 +62,6 @@ const AbsensiHariIni = () => {
   const exportToExcel = () => {
     const workbook = XLSX.utils.book_new();
 
-    // Sheet 1: Sudah Hadir
     const sudahSheet = XLSX.utils.json_to_sheet(
       sudahHadir.map((row) => ({
         UID: row.uid,
@@ -76,7 +73,6 @@ const AbsensiHariIni = () => {
     );
     XLSX.utils.book_append_sheet(workbook, sudahSheet, "Sudah Hadir");
 
-    // Sheet 2: Belum Hadir
     const belumSheet = XLSX.utils.json_to_sheet(
       belumHadir.map((row) => ({
         UID: row.uid,
@@ -87,7 +83,6 @@ const AbsensiHariIni = () => {
     );
     XLSX.utils.book_append_sheet(workbook, belumSheet, "Belum Hadir");
 
-    // Simpan file
     const excelBuffer = XLSX.write(workbook, {
       bookType: "xlsx",
       type: "array",
@@ -97,88 +92,115 @@ const AbsensiHariIni = () => {
   };
 
   return (
-    <div className="container mt-5">
-      <div className="text-center mb-4">
-        <h2 className="fw-bold">Absensi Hari Ini</h2>
-        <p className="text-muted">
-          {tahun}-{bulan}-{hari} ({minggu})
-        </p>
-        <button className="btn btn-success" onClick={exportToExcel}>
-          📥 Download Excel
-        </button>
-      </div>
+    <div
+      className="min-vh-100 py-5"
+      style={{
+        background: "linear-gradient(135deg, #f0f4ff, #d9e4f5)",
+      }}
+    >
+      <div className="container">
+        {/* Header */}
+        <div className="text-center mb-5">
+          <h1 className="fw-bold text-primary">📋 Monitoring Absensi</h1>
+          <p className="text-muted">
+            {tahun}-{bulan}-{hari} ({minggu})
+          </p>
+          <button className="btn btn-success shadow-sm" onClick={exportToExcel}>
+            📥 Download Excel
+          </button>
+        </div>
 
-      <div className="row">
-        {/* Sudah Absen */}
-        <div className="col-md-6">
-          <h5 className="text-success fw-bold mb-3">✔ Sudah Absen</h5>
-          <div className="table-responsive">
-            <table className="table table-hover align-middle shadow-sm">
-              <thead className="table-success">
-                <tr>
-                  <th>UID</th>
-                  <th>Nama</th>
-                  <th>NIM</th>
-                  <th>Bidang</th>
-                  <th>Waktu</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sudahHadir.length === 0 ? (
-                  <tr>
-                    <td colSpan="5" className="text-center text-muted fst-italic">
-                      Belum ada yang absen
-                    </td>
-                  </tr>
-                ) : (
-                  sudahHadir.map((row) => (
-                    <tr key={row.uid}>
-                      <td>{row.uid}</td>
-                      <td className="fw-semibold">{row.nama || "-"}</td>
-                      <td>{row.nim || "-"}</td>
-                      <td>{row.bidang || "-"}</td>
-                      <td>{row.waktu}</td>
+        <div className="row g-4">
+          {/* Sudah Absen */}
+          <div className="col-md-6">
+            <div className="card shadow-lg border-0 rounded-4">
+              <div className="card-header bg-success text-white fw-bold rounded-top-4">
+                ✔ Sudah Absen
+              </div>
+              <div className="card-body table-responsive">
+                <table className="table table-hover align-middle">
+                  <thead className="table-success">
+                    <tr>
+                      <th>UID</th>
+                      <th>Nama</th>
+                      <th>NIM</th>
+                      <th>Bidang</th>
+                      <th>Waktu</th>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  </thead>
+                  <tbody>
+                    {sudahHadir.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan="5"
+                          className="text-center text-muted fst-italic"
+                        >
+                          Belum ada yang absen
+                        </td>
+                      </tr>
+                    ) : (
+                      sudahHadir.map((row) => (
+                        <tr key={row.uid}>
+                          <td>{row.uid}</td>
+                          <td className="fw-semibold">{row.nama || "-"}</td>
+                          <td>{row.nim || "-"}</td>
+                          <td>{row.bidang || "-"}</td>
+                          <td>{row.waktu}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          {/* Belum Absen */}
+          <div className="col-md-6">
+            <div className="card shadow-lg border-0 rounded-4">
+              <div className="card-header bg-danger text-white fw-bold rounded-top-4">
+                ❌ Belum Absen
+              </div>
+              <div className="card-body table-responsive">
+                <table className="table table-hover align-middle">
+                  <thead className="table-danger">
+                    <tr>
+                      <th>UID</th>
+                      <th>Nama</th>
+                      <th>NIM</th>
+                      <th>Bidang</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {belumHadir.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan="4"
+                          className="text-center text-muted fst-italic"
+                        >
+                          Semua sudah absen 🎉
+                        </td>
+                      </tr>
+                    ) : (
+                      belumHadir.map((row) => (
+                        <tr key={row.uid}>
+                          <td>{row.uid}</td>
+                          <td className="fw-semibold">{row.nama}</td>
+                          <td>{row.nim}</td>
+                          <td>{row.bidang}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Belum Absen */}
-        <div className="col-md-6">
-          <h5 className="text-danger fw-bold mb-3">❌ Belum Absen</h5>
-          <div className="table-responsive">
-            <table className="table table-hover align-middle shadow-sm">
-              <thead className="table-danger">
-                <tr>
-                  <th>UID</th>
-                  <th>Nama</th>
-                  <th>NIM</th>
-                  <th>Bidang</th>
-                </tr>
-              </thead>
-              <tbody>
-                {belumHadir.length === 0 ? (
-                  <tr>
-                    <td colSpan="4" className="text-center text-muted fst-italic">
-                      Semua sudah absen 🎉
-                    </td>
-                  </tr>
-                ) : (
-                  belumHadir.map((row) => (
-                    <tr key={row.uid}>
-                      <td>{row.uid}</td>
-                      <td className="fw-semibold">{row.nama}</td>
-                      <td>{row.nim}</td>
-                      <td>{row.bidang}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+        {/* Footer */}
+        <div className="text-center mt-5 text-muted">
+          <small>© {tahun} Sistem Absensi Mahasiswa</small>
         </div>
       </div>
     </div>
