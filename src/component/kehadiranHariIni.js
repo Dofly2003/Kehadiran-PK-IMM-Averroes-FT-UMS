@@ -26,11 +26,17 @@ const AbsensiHariIni = () => {
 
   useEffect(() => {
     // Ambil data user
-    const usersRef = ref(db, "users/");
+    // Ambil data user
+    const usersRef = ref(db, "users/terdaftar");
     onValue(usersRef, (snapshot) => {
       const val = snapshot.val();
-      if (val) setUsers(val);
+      if (val) {
+        setUsers(val);
+      } else {
+        setUsers({});
+      }
     });
+
 
     // Ambil data absensi hari ini
     const absensiRef = ref(db, todayPath);
@@ -48,9 +54,12 @@ const AbsensiHariIni = () => {
 
   let sudahHadir = hadirUIDs.map((uid) => ({
     uid,
-    ...(users[uid] || {}),
+    ...(users[uid] || {}),   // ambil nama, nim, bidang dari users/terdaftar
     waktu: absensiHariIni[uid]?.waktu || "-",
   }));
+
+  sudahHadir.sort((a, b) => new Date(b.waktu) - new Date(a.waktu));
+
 
   sudahHadir.sort((a, b) => (a.waktu < b.waktu ? 1 : -1));
 
