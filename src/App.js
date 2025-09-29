@@ -2,6 +2,7 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import AbsensiList from "./component/AbsensiList";
+import Navbar from "./component/nav";
 import AbsensiHariIni from "./component/kehadiranHariIni"; // pastikan nama & path sesuai
 import LogAbsen from "./component/logAbsen"; // pastikan nama & path sesuai
 import AbsenPerTanggal from "./component/absensipertanggal"; // pastikan nama & path sesuai
@@ -9,6 +10,7 @@ import AbsenPerTanggal from "./component/absensipertanggal"; // pastikan nama & 
 function App() {
   return (
     <Router>
+      <Navbar />      
       <Routes>
         <Route path="/" element={<AbsensiHariIni />} />
         <Route path="/tambah-member" element={<AbsensiList />} />

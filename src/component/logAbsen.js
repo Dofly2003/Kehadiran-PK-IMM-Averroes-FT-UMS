@@ -34,8 +34,8 @@ const AbsensiLog = () => {
         const res = await fetch(`${FIREBASE_URL}/absensi.json`);
         const json = await res.json();
 
-        // Ambil users
-        const resUsers = await fetch(`${FIREBASE_URL}/users.json`);
+        // Ambil users hanya yang terdaftar
+        const resUsers = await fetch(`${FIREBASE_URL}/users/terdaftar.json`);
         const jsonUsers = await resUsers.json();
         if (jsonUsers) setUsers(jsonUsers);
 
@@ -84,7 +84,9 @@ const AbsensiLog = () => {
       const user = users[row.uid] || {};
       return {
         tanggal,
+        uid: row.uid,
         nama: user.nama || "Belum Terdaftar",
+        nim: user.nim || "-",
         bidang: user.bidang || "-",
         waktu: row.waktu,
       };
@@ -163,7 +165,9 @@ const AbsensiLog = () => {
                         <table className="table table-striped table-hover table-bordered mb-0">
                           <thead className="table-dark">
                             <tr>
+                              <th>UID</th>
                               <th>Nama</th>
+                              <th>NIM</th>
                               <th>Bidang</th>
                               <th>Waktu</th>
                             </tr>
@@ -173,7 +177,9 @@ const AbsensiLog = () => {
                               const user = users[row.uid] || {};
                               return (
                                 <tr key={row.id}>
+                                  <td>{row.uid}</td>
                                   <td>{user.nama || "Belum Terdaftar"}</td>
+                                  <td>{user.nim || "-"}</td>
                                   <td>{user.bidang || "-"}</td>
                                   <td>{row.waktu}</td>
                                 </tr>
