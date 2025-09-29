@@ -1,12 +1,12 @@
 // src/components/AbsensiList.js
 import React, { useEffect, useState } from "react";
 import { db } from "../firebase";
-import { ref, onValue, set } from "firebase/database";
+import { ref, onValue, set, remove } from "firebase/database";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 const AbsensiList = () => {
   const [data, setData] = useState([]);
-  const [users, setUsers] = useState({});
+  const [users, setUsers] = useState({ terdaftar: {}, belum_terdaftar: {} });
   const [selectedUID, setSelectedUID] = useState(null);
   const [formData, setFormData] = useState({
     nama: "",
@@ -58,43 +58,100 @@ const AbsensiList = () => {
   }, []);
 
   // Ambil data users
-  useEffect(() => {
-    const usersRef = ref(db, "users/");
-    onValue(usersRef, (snapshot) => {
-      const val = snapshot.val();
-      if (val) setUsers(val);
-    });
-  }, []);
+useEffect(() => {
+  const usersRef = ref(db, "users/");
+  onValue(usersRef, (snapshot) => {
+    const val = snapshot.val() || {};
+    const belum = {};
 
-  // Daftarkan user baru
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    if (!selectedUID) return;
-
-    if (users[selectedUID]?.nama) {
-      alert("⚠ UID ini sudah terdaftar, tidak bisa diupdate lagi!");
-      setSelectedUID(null);
-      setFormData({ nama: "", nim: "", bidang: "" });
-      return;
-    }
-
-    try {
-      await set(ref(db, "users/" + selectedUID), {
-        nama: formData.nama,
-        nim: formData.nim,
-        bidang: formData.bidang,
+    if (val.belum_terdaftar) {
+      Object.entries(val.belum_terdaftar).forEach(([uid, item]) => {
+        belum[uid] = {
+          waktu: item.waktu || "-", 
+          nama: item.nama || "Belum Terdaftar",
+          bidang: item.bidang || "-"
+        };
       });
-
-      alert("✅ User berhasil didaftarkan!");
-      setSelectedUID(null);
-      setFormData({ nama: "", nim: "", bidang: "" });
-    } catch (err) {
-      console.error("Gagal daftar:", err);
     }
-  };
 
-  const sudahTerdaftar = data.filter((row) => users[row.uid]?.nama);
-  const belumTerdaftar = data.filter((row) => !users[row.uid]?.nama);
+    setUsers({
+      terdaftar: val.terdaftar || {},
+      belum_terdaftar: belum,
+    });
+  });
+}, []);
+
+
+// Daftarkan user baru
+const handleRegister = async (e) => {
+  e.preventDefault();
+  if (!selectedUID) return;
+
+  if (users.terdaftar[selectedUID]?.nama) {
+    alert("⚠ UID ini sudah terdaftar, tidak bisa diupdate lagi!");
+    setSelectedUID(null);
+    setFormData({ nama: "", nim: "", bidang: "" });
+    return;
+  }
+
+  try {
+    const now = new Date();
+    const waktuString = now.toISOString().replace("T", " ").substring(0, 19);
+
+    // Simpan ke terdaftar
+    await set(ref(db, "users/terdaftar/" + selectedUID), {
+      nama: formData.nama,
+      nim: formData.nim,
+      bidang: formData.bidang,
+      waktu: waktuString,   // 🟢 tambahkan field waktu
+    });
+
+    // Hapus dari belum_terdaftar
+    await remove(ref(db, "users/belum_terdaftar/" + selectedUID));
+
+    alert("✅ User berhasil didaftarkan!");
+    setSelectedUID(null);
+    setFormData({ nama: "", nim: "", bidang: "" });
+  } catch (err) {
+    console.error("Gagal daftar:", err);
+  }
+};
+
+
+// Gabungkan absensi dengan data users
+const sudahTerdaftar = Object.entries(users.terdaftar || {})
+  .map(([uid, user]) => {
+    // cari absensi terbaru untuk uid ini
+    const absenList = data.filter((row) => row.uid === uid);
+    const latestAbsen = absenList.length > 0
+      ? absenList.reduce((a, b) =>
+          new Date(a.waktu) > new Date(b.waktu) ? a : b
+        )
+      : null;
+
+    return {
+      id: uid,
+      uid,
+      nama: user.nama,
+      nim: user.nim,
+      bidang: user.bidang,
+      waktu: latestAbsen ? latestAbsen.waktu : (user.waktu || "-"),
+    };
+  })
+  .sort((a, b) => new Date(b.waktu) - new Date(a.waktu));
+
+
+const belumTerdaftar = Object.entries(users.belum_terdaftar || {})
+  .map(([uid, item]) => ({
+    id: uid,
+    uid,
+    waktu: item.waktu || "-",
+    nama: item.nama || "Belum Terdaftar",
+  }))
+  .sort((a, b) => new Date(b.waktu) - new Date(a.waktu));
+
+
+
 
   return (
     <div
@@ -124,8 +181,6 @@ const AbsensiList = () => {
                 <tr>
                   <th>UID</th>
                   <th>Nama</th>
-                  <th>NIM</th>
-                  <th>Bidang</th>
                   <th>Waktu</th>
                   <th>Status</th>
                   <th>Aksi</th>
@@ -146,8 +201,6 @@ const AbsensiList = () => {
                     <tr key={row.id}>
                       <td>{row.uid}</td>
                       <td className="text-muted">Belum Terdaftar</td>
-                      <td>-</td>
-                      <td>-</td>
                       <td>{row.waktu}</td>
                       <td>
                         <span className="badge bg-danger">
@@ -204,7 +257,7 @@ const AbsensiList = () => {
                   </tr>
                 ) : (
                   sudahTerdaftar.map((row) => {
-                    const user = users[row.uid] || {};
+                    const user = users.terdaftar[row.uid] || {};
                     return (
                       <tr key={row.id}>
                         <td>{row.uid}</td>
