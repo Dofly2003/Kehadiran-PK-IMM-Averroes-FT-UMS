@@ -101,13 +101,14 @@ const AbsensiLog = () => {
     <div
       className="min-vh-100 py-4"
       style={{
-        background: "linear-gradient(135deg, #f8f9fa, #e9ecef)",
+        background: "linear-gradient(135deg, #0d1117, #1a1f2b)", // dark theme
+        color: "#e0e0e0",
       }}
     >
       <div className="container">
         <div className="text-center mb-4">
-          <h2 className="fw-bold text-primary">📑 Log Absensi Harian</h2>
-          <p className="text-muted">
+          <h2 className="fw-bold text-info">📑 Log Absensi Harian</h2>
+          <p className="text-secondary">
             Data absensi mahasiswa tersimpan berdasarkan tanggal
           </p>
         </div>
@@ -130,7 +131,11 @@ const AbsensiLog = () => {
               const headingId = `heading-${index}`;
 
               return (
-                <div className="accordion-item shadow-sm mb-3" key={tanggal}>
+                <div
+                  className="accordion-item mb-3 border-0 shadow-lg rounded-3"
+                  style={{ background: "#161b22", color: "#e0e0e0" }}
+                  key={tanggal}
+                >
                   <h2 className="accordion-header" id={headingId}>
                     <button
                       className="accordion-button collapsed fw-semibold"
@@ -139,9 +144,13 @@ const AbsensiLog = () => {
                       data-bs-target={`#${collapseId}`}
                       aria-expanded="false"
                       aria-controls={collapseId}
+                      style={{
+                        background: "#0d6efd",
+                        color: "white",
+                      }}
                     >
                       📅 {dayName}, {formattedDate}{" "}
-                      <span className="badge bg-primary ms-2">
+                      <span className="badge bg-light text-dark ms-2">
                         {rows.length} orang
                       </span>
                     </button>
@@ -155,15 +164,15 @@ const AbsensiLog = () => {
                     <div className="accordion-body p-0">
                       <div className="d-flex justify-content-end p-3">
                         <button
-                          className="btn btn-success btn-sm shadow-sm"
+                          className="btn btn-outline-info btn-sm shadow-sm fw-semibold"
                           onClick={() => downloadExcelPerHari(tanggal)}
                         >
                           ⬇ Download Excel Hari Ini
                         </button>
                       </div>
                       <div className="table-responsive">
-                        <table className="table table-striped table-hover table-bordered mb-0">
-                          <thead className="table-dark">
+                        <table className="table table-dark table-hover align-middle mb-0">
+                          <thead style={{ background: "#0d6efd" }}>
                             <tr>
                               <th>UID</th>
                               <th>Nama</th>

@@ -26,27 +26,17 @@ const AbsensiHariIni = () => {
 
   useEffect(() => {
     // Ambil data user
-    // Ambil data user
     const usersRef = ref(db, "users/terdaftar");
     onValue(usersRef, (snapshot) => {
       const val = snapshot.val();
-      if (val) {
-        setUsers(val);
-      } else {
-        setUsers({});
-      }
+      setUsers(val || {});
     });
-
 
     // Ambil data absensi hari ini
     const absensiRef = ref(db, todayPath);
     onValue(absensiRef, (snapshot) => {
       const val = snapshot.val();
-      if (val) {
-        setAbsensiHariIni(val);
-      } else {
-        setAbsensiHariIni({});
-      }
+      setAbsensiHariIni(val || {});
     });
   }, [todayPath]);
 
@@ -54,14 +44,11 @@ const AbsensiHariIni = () => {
 
   let sudahHadir = hadirUIDs.map((uid) => ({
     uid,
-    ...(users[uid] || {}),   // ambil nama, nim, bidang dari users/terdaftar
+    ...(users[uid] || {}),
     waktu: absensiHariIni[uid]?.waktu || "-",
   }));
 
   sudahHadir.sort((a, b) => new Date(b.waktu) - new Date(a.waktu));
-
-
-  sudahHadir.sort((a, b) => (a.waktu < b.waktu ? 1 : -1));
 
   const belumHadir = Object.entries(users)
     .filter(([uid]) => !hadirUIDs.includes(uid))
@@ -104,17 +91,21 @@ const AbsensiHariIni = () => {
     <div
       className="min-vh-100 py-5"
       style={{
-        background: "linear-gradient(135deg, #f0f4ff, #d9e4f5)",
+        background: "linear-gradient(135deg, #0d1117, #1a1f2b)", // hitam ke biru gelap
+        color: "#e0e0e0",
       }}
     >
       <div className="container">
         {/* Header */}
         <div className="text-center mb-5">
-          <h1 className="fw-bold text-primary">📋 Monitoring Absensi</h1>
-          <p className="text-muted">
+          <h1 className="fw-bold text-info">📋 Monitoring Absensi</h1>
+          <p className="text-secondary">
             {tahun}-{bulan}-{hari} ({minggu})
           </p>
-          <button className="btn btn-success shadow-sm" onClick={exportToExcel}>
+          <button
+            className="btn btn-outline-info shadow-sm fw-semibold"
+            onClick={exportToExcel}
+          >
             📥 Download Excel
           </button>
         </div>
@@ -122,13 +113,19 @@ const AbsensiHariIni = () => {
         <div className="row g-4">
           {/* Sudah Absen */}
           <div className="col-md-6">
-            <div className="card shadow-lg border-0 rounded-4">
-              <div className="card-header bg-success text-white fw-bold rounded-top-4">
+            <div
+              className="card shadow-lg border-0 rounded-4"
+              style={{ background: "#161b22", color: "#e0e0e0" }}
+            >
+              <div
+                className="card-header fw-bold rounded-top-4"
+                style={{ background: "#198754", color: "white" }}
+              >
                 ✔ Sudah Absen
               </div>
               <div className="card-body table-responsive">
-                <table className="table table-hover align-middle">
-                  <thead className="table-success">
+                <table className="table table-dark table-hover align-middle mb-0">
+                  <thead className="table-success text-dark">
                     <tr>
                       <th>UID</th>
                       <th>Nama</th>
@@ -166,13 +163,19 @@ const AbsensiHariIni = () => {
 
           {/* Belum Absen */}
           <div className="col-md-6">
-            <div className="card shadow-lg border-0 rounded-4">
-              <div className="card-header bg-danger text-white fw-bold rounded-top-4">
+            <div
+              className="card shadow-lg border-0 rounded-4"
+              style={{ background: "#161b22", color: "#e0e0e0" }}
+            >
+              <div
+                className="card-header fw-bold rounded-top-4"
+                style={{ background: "#dc3545", color: "white" }}
+              >
                 ❌ Belum Absen
               </div>
               <div className="card-body table-responsive">
-                <table className="table table-hover align-middle">
-                  <thead className="table-danger">
+                <table className="table table-dark table-hover align-middle mb-0">
+                  <thead className="table-danger text-dark">
                     <tr>
                       <th>UID</th>
                       <th>Nama</th>
@@ -208,7 +211,7 @@ const AbsensiHariIni = () => {
         </div>
 
         {/* Footer */}
-        <div className="text-center mt-5 text-muted">
+        <div className="text-center mt-5 text-secondary">
           <small>© {tahun} Sistem Absensi Mahasiswa</small>
         </div>
       </div>

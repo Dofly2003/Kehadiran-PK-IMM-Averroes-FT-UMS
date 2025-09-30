@@ -37,7 +37,7 @@ const AbsensiList = () => {
           });
         });
 
-        // Ambil hanya absensi terakhir per UID
+        // Ambil absensi terakhir per UID
         const latestPerUID = {};
         arr.forEach((row) => {
           if (
@@ -58,106 +58,99 @@ const AbsensiList = () => {
   }, []);
 
   // Ambil data users
-useEffect(() => {
-  const usersRef = ref(db, "users/");
-  onValue(usersRef, (snapshot) => {
-    const val = snapshot.val() || {};
-    const belum = {};
+  useEffect(() => {
+    const usersRef = ref(db, "users/");
+    onValue(usersRef, (snapshot) => {
+      const val = snapshot.val() || {};
+      const belum = {};
 
-    if (val.belum_terdaftar) {
-      Object.entries(val.belum_terdaftar).forEach(([uid, item]) => {
-        belum[uid] = {
-          waktu: item.waktu || "-", 
-          nama: item.nama || "Belum Terdaftar",
-          bidang: item.bidang || "-"
-        };
+      if (val.belum_terdaftar) {
+        Object.entries(val.belum_terdaftar).forEach(([uid, item]) => {
+          belum[uid] = {
+            waktu: item.waktu || "-",
+            nama: item.nama || "Belum Terdaftar",
+            bidang: item.bidang || "-",
+          };
+        });
+      }
+
+      setUsers({
+        terdaftar: val.terdaftar || {},
+        belum_terdaftar: belum,
       });
+    });
+  }, []);
+
+  // Daftarkan user baru
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    if (!selectedUID) return;
+
+    if (users.terdaftar[selectedUID]?.nama) {
+      alert("⚠ UID ini sudah terdaftar!");
+      setSelectedUID(null);
+      setFormData({ nama: "", nim: "", bidang: "" });
+      return;
     }
 
-    setUsers({
-      terdaftar: val.terdaftar || {},
-      belum_terdaftar: belum,
-    });
-  });
-}, []);
+    try {
+      const now = new Date();
+      const waktuString = now.toISOString().replace("T", " ").substring(0, 19);
 
+      await set(ref(db, "users/terdaftar/" + selectedUID), {
+        nama: formData.nama,
+        nim: formData.nim,
+        bidang: formData.bidang,
+        waktu: waktuString,
+      });
 
-// Daftarkan user baru
-const handleRegister = async (e) => {
-  e.preventDefault();
-  if (!selectedUID) return;
+      await remove(ref(db, "users/belum_terdaftar/" + selectedUID));
 
-  if (users.terdaftar[selectedUID]?.nama) {
-    alert("⚠ UID ini sudah terdaftar, tidak bisa diupdate lagi!");
-    setSelectedUID(null);
-    setFormData({ nama: "", nim: "", bidang: "" });
-    return;
-  }
+      alert("✅ User berhasil didaftarkan!");
+      setSelectedUID(null);
+      setFormData({ nama: "", nim: "", bidang: "" });
+    } catch (err) {
+      console.error("Gagal daftar:", err);
+    }
+  };
 
-  try {
-    const now = new Date();
-    const waktuString = now.toISOString().replace("T", " ").substring(0, 19);
+  // Gabungkan absensi dengan data users
+  const sudahTerdaftar = Object.entries(users.terdaftar || {})
+    .map(([uid, user]) => {
+      const absenList = data.filter((row) => row.uid === uid);
+      const latestAbsen =
+        absenList.length > 0
+          ? absenList.reduce((a, b) =>
+              new Date(a.waktu) > new Date(b.waktu) ? a : b
+            )
+          : null;
 
-    // Simpan ke terdaftar
-    await set(ref(db, "users/terdaftar/" + selectedUID), {
-      nama: formData.nama,
-      nim: formData.nim,
-      bidang: formData.bidang,
-      waktu: waktuString,   // 🟢 tambahkan field waktu
-    });
+      return {
+        id: uid,
+        uid,
+        nama: user.nama,
+        nim: user.nim,
+        bidang: user.bidang,
+        waktu: latestAbsen ? latestAbsen.waktu : user.waktu || "-",
+      };
+    })
+    .sort((a, b) => new Date(b.waktu) - new Date(a.waktu));
 
-    // Hapus dari belum_terdaftar
-    await remove(ref(db, "users/belum_terdaftar/" + selectedUID));
-
-    alert("✅ User berhasil didaftarkan!");
-    setSelectedUID(null);
-    setFormData({ nama: "", nim: "", bidang: "" });
-  } catch (err) {
-    console.error("Gagal daftar:", err);
-  }
-};
-
-
-// Gabungkan absensi dengan data users
-const sudahTerdaftar = Object.entries(users.terdaftar || {})
-  .map(([uid, user]) => {
-    // cari absensi terbaru untuk uid ini
-    const absenList = data.filter((row) => row.uid === uid);
-    const latestAbsen = absenList.length > 0
-      ? absenList.reduce((a, b) =>
-          new Date(a.waktu) > new Date(b.waktu) ? a : b
-        )
-      : null;
-
-    return {
+  const belumTerdaftar = Object.entries(users.belum_terdaftar || {})
+    .map(([uid, item]) => ({
       id: uid,
       uid,
-      nama: user.nama,
-      nim: user.nim,
-      bidang: user.bidang,
-      waktu: latestAbsen ? latestAbsen.waktu : (user.waktu || "-"),
-    };
-  })
-  .sort((a, b) => new Date(b.waktu) - new Date(a.waktu));
-
-
-const belumTerdaftar = Object.entries(users.belum_terdaftar || {})
-  .map(([uid, item]) => ({
-    id: uid,
-    uid,
-    waktu: item.waktu || "-",
-    nama: item.nama || "Belum Terdaftar",
-  }))
-  .sort((a, b) => new Date(b.waktu) - new Date(a.waktu));
-
-
-
+      waktu: item.waktu || "-",
+      nama: item.nama || "Belum Terdaftar",
+    }))
+    .sort((a, b) => new Date(b.waktu) - new Date(a.waktu));
 
   return (
     <div
-      className="min-vh-100 py-5"
+      className="min-vh-100 py-5 "
       style={{
-        background: "linear-gradient(135deg, #f9f9f9, #eef2f7)",
+        background: "linear-gradient(135deg, #0d1117, #1a1f2b)", // hitam ke biru gelap
+        color: "#e0e0e0",
       }}
     >
       <div className="container">
@@ -170,14 +163,14 @@ const belumTerdaftar = Object.entries(users.belum_terdaftar || {})
           <div
             className="card-header fw-bold text-white rounded-top-4"
             style={{
-              background: "linear-gradient(45deg, #e74c3c, #ff7675)",
+              background: "linear-gradient(90deg, #000, #0d6efd)", // hitam → biru
             }}
           >
             ❌ Belum Terdaftar
           </div>
           <div className="card-body table-responsive">
             <table className="table table-hover align-middle">
-              <thead className="table-danger">
+              <thead className="table-dark">
                 <tr>
                   <th>UID</th>
                   <th>Nama</th>
@@ -203,7 +196,7 @@ const belumTerdaftar = Object.entries(users.belum_terdaftar || {})
                       <td className="text-muted">Belum Terdaftar</td>
                       <td>{row.waktu}</td>
                       <td>
-                        <span className="badge bg-danger">
+                        <span className="badge bg-secondary">
                           Belum Terdaftar
                         </span>
                       </td>
@@ -228,14 +221,14 @@ const belumTerdaftar = Object.entries(users.belum_terdaftar || {})
           <div
             className="card-header fw-bold text-white rounded-top-4"
             style={{
-              background: "linear-gradient(45deg, #27ae60, #2ecc71)",
+              background: "linear-gradient(90deg, #0d6efd, #000)", // biru → hitam
             }}
           >
             ✔ Sudah Terdaftar
           </div>
           <div className="card-body table-responsive">
             <table className="table table-hover align-middle">
-              <thead className="table-success">
+              <thead className="table-primary">
                 <tr>
                   <th>UID</th>
                   <th>Nama</th>
@@ -266,7 +259,7 @@ const belumTerdaftar = Object.entries(users.belum_terdaftar || {})
                         <td>{user.bidang}</td>
                         <td>{row.waktu}</td>
                         <td>
-                          <span className="badge bg-success">
+                          <span className="badge bg-primary">
                             ✔ Terdaftar
                           </span>
                         </td>
@@ -284,11 +277,16 @@ const belumTerdaftar = Object.entries(users.belum_terdaftar || {})
           <div
             className="modal fade show d-block"
             tabIndex="-1"
-            style={{ background: "rgba(0,0,0,0.5)" }}
+            style={{ background: "rgba(0,0,0,0.6)" }}
           >
             <div className="modal-dialog">
               <div className="modal-content rounded-4 shadow-lg">
-                <div className="modal-header bg-primary text-white rounded-top-4">
+                <div
+                  className="modal-header text-white rounded-top-4"
+                  style={{
+                    background: "linear-gradient(90deg, #000, #0d6efd)",
+                  }}
+                >
                   <h5 className="modal-title">
                     ✍ Daftarkan UID: <span>{selectedUID}</span>
                   </h5>
@@ -340,7 +338,7 @@ const belumTerdaftar = Object.entries(users.belum_terdaftar || {})
                   <div className="modal-footer">
                     <button
                       type="submit"
-                      className="btn btn-success rounded-pill px-4"
+                      className="btn btn-primary rounded-pill px-4"
                     >
                       ✅ Simpan
                     </button>

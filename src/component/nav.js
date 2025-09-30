@@ -7,13 +7,17 @@ const Navbar = () => {
     <nav
       className="navbar navbar-expand-lg shadow-sm"
       style={{
-        background: "linear-gradient(90deg, #6a11cb 0%, #2575fc 100%)", // ungu → biru
+        backgroundColor: "#000", // hitam solid
         backdropFilter: "blur(6px)",
       }}
     >
       <div className="container">
-        <NavLink className="navbar-brand fw-semibold text-white" to="/">
-          🎓 <span style={{ fontWeight: 600 }}>Sistem Absensi</span>
+        <NavLink
+          className="navbar-brand fw-semibold"
+          to="/"
+          style={{ color: "#0d6efd", fontWeight: 700 }}
+        >
+          🎓 <span style={{ color: "#fff" }}>Sistem Absensi</span>
         </NavLink>
 
         <button
@@ -33,11 +37,14 @@ const Navbar = () => {
             <li className="nav-item">
               <NavLink
                 className={({ isActive }) =>
-                  "nav-link px-3 rounded-3 me-2 " +
+                  "nav-link px-3 rounded-3 me-2 transition " +
                   (isActive
                     ? "bg-white text-primary fw-semibold shadow-sm"
-                    : "text-white-50 hover-text-white")
+                    : "text-white")
                 }
+                style={{
+                  transition: "all 0.3s ease",
+                }}
                 to="/Tambah-Member"
               >
                 📋 Daftar Member
@@ -46,11 +53,14 @@ const Navbar = () => {
             <li className="nav-item">
               <NavLink
                 className={({ isActive }) =>
-                  "nav-link px-3 rounded-3 me-2 " +
+                  "nav-link px-3 rounded-3 me-2 transition " +
                   (isActive
                     ? "bg-white text-primary fw-semibold shadow-sm"
-                    : "text-white-50 hover-text-white")
+                    : "text-white")
                 }
+                style={{
+                  transition: "all 0.3s ease",
+                }}
                 to="/"
               >
                 ✅ Absensi Hari Ini
@@ -59,11 +69,14 @@ const Navbar = () => {
             <li className="nav-item">
               <NavLink
                 className={({ isActive }) =>
-                  "nav-link px-3 rounded-3 " +
+                  "nav-link px-3 rounded-3 transition " +
                   (isActive
                     ? "bg-white text-primary fw-semibold shadow-sm"
-                    : "text-white-50 hover-text-white")
+                    : "text-white")
                 }
+                style={{
+                  transition: "all 0.3s ease",
+                }}
                 to="/log-absen"
               >
                 📑 Log Absensi
