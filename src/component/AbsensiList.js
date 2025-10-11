@@ -1,20 +1,17 @@
-// src/components/AbsensiList.js
+// ===================== AbsensiList.js =====================
 import React, { useEffect, useState } from "react";
 import { db } from "../firebase";
-import { ref, onValue, set, remove } from "firebase/database";
+import { ref, onValue, set, remove, update, get } from "firebase/database";
 import "bootstrap/dist/css/bootstrap.min.css";
+import "./AbsensiList.css"; // tampilan fresh list-style
 
 const AbsensiList = () => {
   const [data, setData] = useState([]);
   const [users, setUsers] = useState({ terdaftar: {}, belum_terdaftar: {} });
   const [selectedUID, setSelectedUID] = useState(null);
-  const [formData, setFormData] = useState({
-    nama: "",
-    nim: "",
-    bidang: "",
-  });
+  const [formData, setFormData] = useState({ nama: "", nim: "", bidang: "" });
 
-  // Ambil data absensi
+  // ================= Ambil Data Absensi =================
   useEffect(() => {
     const absensiRef = ref(db, "absensi/");
     onValue(absensiRef, (snapshot) => {
@@ -22,10 +19,10 @@ const AbsensiList = () => {
       if (val) {
         const arr = [];
         Object.entries(val).forEach(([tahun, bulanObj]) => {
-          Object.entries(bulanObj).forEach(([bulan, mingguObj]) => {
-            Object.entries(mingguObj).forEach(([minggu, hariObj]) => {
-              Object.entries(hariObj).forEach(([hari, uidObj]) => {
-                Object.entries(uidObj).forEach(([uid, item]) => {
+          Object.entries(bulanObj || {}).forEach(([bulan, mingguObj]) => {
+            Object.entries(mingguObj || {}).forEach(([minggu, hariObj]) => {
+              Object.entries(hariObj || {}).forEach(([hari, uidObj]) => {
+                Object.entries(uidObj || {}).forEach(([uid, item]) => {
                   arr.push({
                     id: `${tahun}-${bulan}-${minggu}-${hari}-${uid}`,
                     uid,
@@ -48,16 +45,17 @@ const AbsensiList = () => {
           }
         });
 
-        // Urutkan terbaru
         const uniqueArr = Object.values(latestPerUID).sort(
           (a, b) => new Date(b.waktu) - new Date(a.waktu)
         );
         setData(uniqueArr);
+      } else {
+        setData([]);
       }
     });
   }, []);
 
-  // Ambil data users
+  // ================= Ambil Data Users =================
   useEffect(() => {
     const usersRef = ref(db, "users/");
     onValue(usersRef, (snapshot) => {
@@ -81,7 +79,7 @@ const AbsensiList = () => {
     });
   }, []);
 
-  // Daftarkan user baru
+  // ================= Daftarkan User =================
   const handleRegister = async (e) => {
     e.preventDefault();
     if (!selectedUID) return;
@@ -111,10 +109,77 @@ const AbsensiList = () => {
       setFormData({ nama: "", nim: "", bidang: "" });
     } catch (err) {
       console.error("Gagal daftar:", err);
+      alert("❌ Gagal mendaftarkan user. Periksa console.");
     }
   };
 
-  // Gabungkan absensi dengan data users
+  // ================= Hapus UID (data user saja) =================
+  const handleDeleteUID = async (uid, type) => {
+    if (window.confirm(`Yakin ingin menghapus UID ${uid}?`)) {
+      try {
+        if (type === "belum") {
+          await remove(ref(db, "users/belum_terdaftar/" + uid));
+        } else if (type === "terdaftar") {
+          await remove(ref(db, "users/terdaftar/" + uid));
+        }
+        alert("🗑 UID berhasil dihapus!");
+      } catch (err) {
+        console.error("Gagal hapus UID:", err);
+        alert("❌ Gagal menghapus UID. Periksa console.");
+      }
+    }
+  };
+
+  // ================= Hapus seluruh absensi berdasarkan UID =================
+  const deleteAbsensiByUID = async (uid) => {
+    const absensiRootRef = ref(db, "absensi/");
+    const snapshot = await get(absensiRootRef);
+    if (!snapshot.exists()) return 0;
+
+    const val = snapshot.val();
+    const updates = {};
+    let count = 0;
+
+    Object.entries(val || {}).forEach(([tahun, bulanObj]) => {
+      Object.entries(bulanObj || {}).forEach(([bulan, mingguObj]) => {
+        Object.entries(mingguObj || {}).forEach(([minggu, hariObj]) => {
+          Object.entries(hariObj || {}).forEach(([hari, uidObj]) => {
+            if (uidObj && uidObj[uid]) {
+              updates[`absensi/${tahun}/${bulan}/${minggu}/${hari}/${uid}`] = null;
+              count++;
+            }
+          });
+        });
+      });
+    });
+
+    if (count > 0) {
+      await update(ref(db), updates);
+    }
+    return count;
+  };
+
+  const handleDeleteAbsensi = async (uid) => {
+    if (!uid) return;
+    const ok = window.confirm(
+      `Yakin ingin menghapus SELURUH riwayat absensi untuk UID ${uid}?`
+    );
+    if (!ok) return;
+
+    try {
+      const deleted = await deleteAbsensiByUID(uid);
+      if (deleted > 0) {
+        alert(`🧹 Berhasil menghapus ${deleted} entri absensi untuk UID ${uid}.`);
+      } else {
+        alert("ℹ Tidak ada data absensi yang ditemukan untuk UID ini.");
+      }
+    } catch (err) {
+      console.error("Gagal hapus absensi:", err);
+      alert("❌ Gagal menghapus absensi. Periksa console.");
+    }
+  };
+
+  // ================= Gabung Absensi + Users =================
   const sudahTerdaftar = Object.entries(users.terdaftar || {})
     .map(([uid, user]) => {
       const absenList = data.filter((row) => row.uid === uid);
@@ -146,216 +211,188 @@ const AbsensiList = () => {
     .sort((a, b) => new Date(b.waktu) - new Date(a.waktu));
 
   return (
-    <div
-      className="min-vh-100 py-5 "
-      style={{
-        background: "linear-gradient(135deg, #0d1117, #1a1f2b)", // hitam ke biru gelap
-        color: "#e0e0e0",
-      }}
-    >
-      <div className="container">
-        <h2 className="fw-bold text-center mb-5 text-primary">
-          🎓 Manajemen Absensi Mahasiswa
-        </h2>
-
-        {/* Belum Terdaftar */}
-        <div className="card shadow-lg mb-5 border-0 rounded-4">
-          <div
-            className="card-header fw-bold text-white rounded-top-4"
-            style={{
-              background: "linear-gradient(90deg, #000, #0d6efd)", // hitam → biru
-            }}
-          >
-            ❌ Belum Terdaftar
-          </div>
-          <div className="card-body table-responsive">
-            <table className="table table-hover align-middle">
-              <thead className="table-dark">
-                <tr>
-                  <th>UID</th>
-                  <th>Nama</th>
-                  <th>Waktu</th>
-                  <th>Status</th>
-                  <th>Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {belumTerdaftar.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan="7"
-                      className="text-center text-muted fst-italic"
-                    >
-                      Semua UID sudah terdaftar 🎉
-                    </td>
-                  </tr>
-                ) : (
-                  belumTerdaftar.map((row) => (
-                    <tr key={row.id}>
-                      <td>{row.uid}</td>
-                      <td className="text-muted">Belum Terdaftar</td>
-                      <td>{row.waktu}</td>
-                      <td>
-                        <span className="badge bg-secondary">
-                          Belum Terdaftar
-                        </span>
-                      </td>
-                      <td>
-                        <button
-                          className="btn btn-sm btn-primary rounded-pill"
-                          onClick={() => setSelectedUID(row.uid)}
-                        >
-                          ➕ Daftarkan
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+    <div className="absensi-page">
+      <div className="container-xl px-2 px-sm-3">
+        <div className="page-header">
+          <div className="title-wrap">
+            <span className="badge-soft">Dashboard</span>
+            <h2 className="page-title">Manajemen Absensi Mahasiswa</h2>
+            <p className="page-subtitle">Kelola UID, pendaftaran, dan riwayat absensi</p>
           </div>
         </div>
 
-        {/* Sudah Terdaftar */}
-        <div className="card shadow-lg border-0 rounded-4">
-          <div
-            className="card-header fw-bold text-white rounded-top-4"
-            style={{
-              background: "linear-gradient(90deg, #0d6efd, #000)", // biru → hitam
-            }}
-          >
-            ✔ Sudah Terdaftar
+        {/* ================= Belum Terdaftar ================= */}
+        <section className="section-card">
+          <div className="section-header amber">
+            <div className="dot amber" />
+            <h5 className="m-0">Belum Terdaftar</h5>
+            <span className="count-pill amber ms-auto">UID: {belumTerdaftar.length}</span>
           </div>
-          <div className="card-body table-responsive">
-            <table className="table table-hover align-middle">
-              <thead className="table-primary">
-                <tr>
-                  <th>UID</th>
-                  <th>Nama</th>
-                  <th>NIM</th>
-                  <th>Bidang</th>
-                  <th>Waktu</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sudahTerdaftar.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan="6"
-                      className="text-center text-muted fst-italic"
-                    >
-                      Belum ada data terdaftar
-                    </td>
-                  </tr>
-                ) : (
-                  sudahTerdaftar.map((row) => {
-                    const user = users.terdaftar[row.uid] || {};
-                    return (
-                      <tr key={row.id}>
-                        <td>{row.uid}</td>
-                        <td className="fw-semibold text-dark">{user.nama}</td>
-                        <td>{user.nim}</td>
-                        <td>{user.bidang}</td>
-                        <td>{row.waktu}</td>
-                        <td>
-                          <span className="badge bg-primary">
-                            ✔ Terdaftar
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
 
-        {/* Modal Daftar */}
-        {selectedUID && (
-          <div
-            className="modal fade show d-block"
-            tabIndex="-1"
-            style={{ background: "rgba(0,0,0,0.6)" }}
-          >
-            <div className="modal-dialog">
-              <div className="modal-content rounded-4 shadow-lg">
-                <div
-                  className="modal-header text-white rounded-top-4"
-                  style={{
-                    background: "linear-gradient(90deg, #000, #0d6efd)",
-                  }}
-                >
-                  <h5 className="modal-title">
-                    ✍ Daftarkan UID: <span>{selectedUID}</span>
-                  </h5>
-                  <button
-                    type="button"
-                    className="btn-close"
-                    onClick={() => setSelectedUID(null)}
-                  ></button>
+          <div className="list-table">
+            {belumTerdaftar.length === 0 ? (
+              <div className="empty-state">Semua UID sudah terdaftar 🎉</div>
+            ) : (
+              belumTerdaftar.map((row) => (
+                <div key={row.id} className="list-row">
+                  <div className="list-cell">
+                    <div className="list-label">UID</div>
+                    <div className="list-value mono">{row.uid}</div>
+                  </div>
+                  <div className="list-cell">
+                    <div className="list-label">Waktu</div>
+                    <div className="list-value">{row.waktu}</div>
+                  </div>
+                  <div className="list-cell status">
+                    <div className="list-label">Status</div>
+                    <div className="list-value">
+                      <span className="status-dot gray" /> Belum terdaftar
+                    </div>
+                  </div>
+                  <div className="list-cell actions ms-auto">
+                    <button
+                      className="btn btn-gradient btn-sm"
+                      onClick={() => setSelectedUID(row.uid)}
+                    >
+                      ➕ Daftarkan
+                    </button>
+                    <button
+                      className="btn btn-outline-amber btn-sm"
+                      onClick={() => handleDeleteAbsensi(row.uid)}
+                    >
+                      🧹 Hapus Absensi
+                    </button>
+                    <button
+                      className="btn btn-outline-danger btn-sm"
+                      onClick={() => handleDeleteUID(row.uid, "belum")}
+                    >
+                      🗑 Hapus UID
+                    </button>
+                  </div>
                 </div>
-                <form onSubmit={handleRegister}>
-                  <div className="modal-body">
-                    <div className="mb-3">
-                      <label className="form-label fw-semibold">Nama</label>
-                      <input
-                        type="text"
-                        className="form-control rounded-pill"
-                        value={formData.nama}
-                        onChange={(e) =>
-                          setFormData({ ...formData, nama: e.target.value })
-                        }
-                        required
-                      />
+              ))
+            )}
+          </div>
+        </section>
+
+        {/* ================= Sudah Terdaftar ================= */}
+        <section className="section-card">
+          <div className="section-header blue">
+            <div className="dot blue" />
+            <h5 className="m-0">Sudah Terdaftar</h5>
+            <span className="count-pill blue ms-auto">Mahasiswa: {sudahTerdaftar.length}</span>
+          </div>
+
+          <div className="list-table">
+            {sudahTerdaftar.length === 0 ? (
+              <div className="empty-state">Belum ada data terdaftar</div>
+            ) : (
+              sudahTerdaftar.map((row) => {
+                const user = users.terdaftar[row.uid] || {};
+                return (
+                  <div key={row.id} className="list-row">
+                    <div className="list-cell">
+                      <div className="list-label">Nama</div>
+                      <div className="list-value fw-semibold">{user.nama}</div>
                     </div>
-                    <div className="mb-3">
-                      <label className="form-label fw-semibold">NIM</label>
-                      <input
-                        type="text"
-                        className="form-control rounded-pill"
-                        value={formData.nim}
-                        onChange={(e) =>
-                          setFormData({ ...formData, nim: e.target.value })
-                        }
-                        required
-                      />
+                    <div className="list-cell">
+                      <div className="list-label">NIM</div>
+                      <div className="list-value mono">{user.nim}</div>
                     </div>
-                    <div className="mb-3">
-                      <label className="form-label fw-semibold">Bidang</label>
-                      <input
-                        type="text"
-                        className="form-control rounded-pill"
-                        value={formData.bidang}
-                        onChange={(e) =>
-                          setFormData({ ...formData, bidang: e.target.value })
-                        }
-                        required
-                      />
+                    <div className="list-cell">
+                      <div className="list-label">Bidang</div>
+                      <div className="list-value">{user.bidang}</div>
+                    </div>
+                    <div className="list-cell">
+                      <div className="list-label">Waktu</div>
+                      <div className="list-value">{row.waktu}</div>
+                    </div>
+                    <div className="list-cell status">
+                      <div className="list-label">Status</div>
+                      <div className="list-value">
+                        <span className="status-dot green" /> Terdaftar
+                      </div>
+                    </div>
+                    <div className="list-cell actions ms-auto">
+                      <button
+                        className="btn btn-outline-amber btn-sm"
+                        onClick={() => handleDeleteAbsensi(row.uid)}
+                      >
+                        🧹 Hapus Absensi
+                      </button>
+                      <button
+                        className="btn btn-outline-danger btn-sm"
+                        onClick={() => handleDeleteUID(row.uid, "terdaftar")}
+                      >
+                        🗑 Hapus UID
+                      </button>
                     </div>
                   </div>
-                  <div className="modal-footer">
-                    <button
-                      type="submit"
-                      className="btn btn-primary rounded-pill px-4"
-                    >
-                      ✅ Simpan
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-secondary rounded-pill px-4"
-                      onClick={() => setSelectedUID(null)}
-                    >
-                      Batal
-                    </button>
-                  </div>
-                </form>
+                );
+              })
+            )}
+          </div>
+        </section>
+      </div>
+
+      {/* ================= Modal Daftar ================= */}
+      {selectedUID && (
+        <div className="modal fade show d-block" tabIndex="-1" style={{ background: "rgba(2,6,23,0.65)" }}>
+          <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div className="modal-content modal-glass">
+              <div className="modal-header modal-header-gradient">
+                <h5 className="modal-title">
+                  ✍ Daftarkan UID: <span className="mono">{selectedUID}</span>
+                </h5>
+                <button type="button" className="btn-close" onClick={() => setSelectedUID(null)}></button>
               </div>
+              <form onSubmit={handleRegister}>
+                <div className="modal-body">
+                  <div className="mb-3">
+                    <label className="form-label fw-semibold">Nama</label>
+                    <input
+                      type="text"
+                      className="form-control pill"
+                      value={formData.nama}
+                      onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
+                      placeholder="Masukkan nama lengkap"
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label fw-semibold">NIM</label>
+                    <input
+                      type="text"
+                      className="form-control pill mono"
+                      value={formData.nim}
+                      onChange={(e) => setFormData({ ...formData, nim: e.target.value })}
+                      placeholder="Contoh: 22.11.1234"
+                      required
+                    />
+                  </div>
+                  <div className="mb-2">
+                    <label className="form-label fw-semibold">Bidang</label>
+                    <input
+                      type="text"
+                      className="form-control pill"
+                      value={formData.bidang}
+                      onChange={(e) => setFormData({ ...formData, bidang: e.target.value })}
+                      placeholder="Contoh: Backend / Frontend / IoT"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="modal-footer gap-2">
+                  <button type="submit" className="btn btn-gradient px-4">✅ Simpan</button>
+                  <button type="button" className="btn btn-ghost px-4" onClick={() => setSelectedUID(null)}>
+                    Batal
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

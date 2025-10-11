@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import * as XLSX from "xlsx";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
+import "./logAbsen.css";
 
 const FIREBASE_URL =
   "https://absensi-organisasi-default-rtdb.asia-southeast1.firebasedatabase.app";
@@ -80,7 +81,7 @@ const AbsensiLog = () => {
 
   // Download Excel khusus 1 hari
   const downloadExcelPerHari = (tanggal) => {
-    const rows = data[tanggal].map((row) => {
+    const rows = (data[tanggal] || []).map((row) => {
       const user = users[row.uid] || {};
       return {
         tanggal,
@@ -97,111 +98,117 @@ const AbsensiLog = () => {
     XLSX.writeFile(wb, `log_absensi_${tanggal}.xlsx`);
   };
 
+  const tanggalList = Object.keys(data).sort().reverse();
+
   return (
-    <div
-      className="min-vh-100 py-4"
-      style={{
-        background: "linear-gradient(135deg, #0d1117, #1a1f2b)", // dark theme
-        color: "#e0e0e0",
-      }}
-    >
-      <div className="container">
-        <div className="text-center mb-4">
-          <h2 className="fw-bold text-info">📑 Log Absensi Harian</h2>
-          <p className="text-secondary">
-            Data absensi mahasiswa tersimpan berdasarkan tanggal
-          </p>
+    <div className="absensi-log-page">
+      <div className="container-xl px-2 px-sm-3">
+        {/* Header */}
+        <div className="page-header">
+          <div className="title-wrap">
+            <span className="badge-soft">Log</span>
+            <h2 className="page-title">📑 Log Absensi Harian</h2>
+            <p className="page-subtitle">Data absensi mahasiswa tersimpan berdasarkan tanggal</p>
+          </div>
         </div>
 
-        {Object.keys(data).length === 0 && (
-          <div className="alert alert-info shadow-sm text-center">
-            Belum ada data absensi.
-          </div>
+        {tanggalList.length === 0 && (
+          <div className="empty-state my-3">Belum ada data absensi.</div>
         )}
 
-        <div className="accordion" id="accordionAbsensi">
-          {Object.keys(data)
-            .sort()
-            .reverse()
-            .map((tanggal, index) => {
-              const rows = data[tanggal];
-              const dayName = getDayName(tanggal);
-              const formattedDate = formatDate(tanggal);
-              const collapseId = `collapse-${index}`;
-              const headingId = `heading-${index}`;
+        {/* Accordion per tanggal */}
+        <div className="accordion glass-accordion" id="accordionAbsensi">
+          {tanggalList.map((tanggal, index) => {
+            const rows = data[tanggal];
+            const dayName = getDayName(tanggal);
+            const formattedDate = formatDate(tanggal);
+            const collapseId = `collapse-${index}`;
+            const headingId = `heading-${index}`;
 
-              return (
-                <div
-                  className="accordion-item mb-3 border-0 shadow-lg rounded-3"
-                  style={{ background: "#161b22", color: "#e0e0e0" }}
-                  key={tanggal}
-                >
-                  <h2 className="accordion-header" id={headingId}>
-                    <button
-                      className="accordion-button collapsed fw-semibold"
-                      type="button"
-                      data-bs-toggle="collapse"
-                      data-bs-target={`#${collapseId}`}
-                      aria-expanded="false"
-                      aria-controls={collapseId}
-                      style={{
-                        background: "#0d6efd",
-                        color: "white",
-                      }}
-                    >
-                      📅 {dayName}, {formattedDate}{" "}
-                      <span className="badge bg-light text-dark ms-2">
-                        {rows.length} orang
-                      </span>
-                    </button>
-                  </h2>
-                  <div
-                    id={collapseId}
-                    className="accordion-collapse collapse"
-                    aria-labelledby={headingId}
-                    data-bs-parent="#accordionAbsensi"
+            return (
+              <div className="accordion-item glass-item" key={tanggal}>
+                <h2 className="accordion-header" id={headingId}>
+                  <button
+                    className="accordion-button glass-button collapsed"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target={`#${collapseId}`}
+                    aria-expanded="false"
+                    aria-controls={collapseId}
                   >
-                    <div className="accordion-body p-0">
-                      <div className="d-flex justify-content-end p-3">
-                        <button
-                          className="btn btn-outline-info btn-sm shadow-sm fw-semibold"
-                          onClick={() => downloadExcelPerHari(tanggal)}
-                        >
-                          ⬇ Download Excel Hari Ini
-                        </button>
-                      </div>
-                      <div className="table-responsive">
-                        <table className="table table-dark table-hover align-middle mb-0">
-                          <thead style={{ background: "#0d6efd" }}>
-                            <tr>
-                              <th>UID</th>
-                              <th>Nama</th>
-                              <th>NIM</th>
-                              <th>Bidang</th>
-                              <th>Waktu</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {rows.map((row) => {
-                              const user = users[row.uid] || {};
-                              return (
-                                <tr key={row.id}>
-                                  <td>{row.uid}</td>
-                                  <td>{user.nama || "Belum Terdaftar"}</td>
-                                  <td>{user.nim || "-"}</td>
-                                  <td>{user.bidang || "-"}</td>
-                                  <td>{row.waktu}</td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
+                    <div className="header-left">
+                      <span className="dot green" />
+                      <span className="date-title">
+                        {dayName}, {formattedDate}
+                      </span>
+                    </div>
+                    <span className="count-pill green ms-auto">{rows.length} orang</span>
+                  </button>
+                </h2>
+                <div
+                  id={collapseId}
+                  className="accordion-collapse collapse"
+                  aria-labelledby={headingId}
+                  data-bs-parent="#accordionAbsensi"
+                >
+                  <div className="accordion-body p-0">
+                    <div className="d-flex justify-content-end p-3">
+                      <button
+                        className="btn btn-gradient"
+                        onClick={() => downloadExcelPerHari(tanggal)}
+                      >
+                        ⬇ Download Excel Hari Ini
+                      </button>
+                    </div>
+
+                    {/* List-style rows */}
+                    <div className="list-table">
+                      {rows.map((row) => {
+                        const user = users[row.uid] || {};
+                        return (
+                          <div key={row.id} className="list-row">
+                            <div className="list-cell">
+                              <div className="list-label">UID</div>
+                              <div className="list-value mono">{row.uid}</div>
+                            </div>
+                            <div className="list-cell">
+                              <div className="list-label">Nama</div>
+                              <div className="list-value fw-semibold">
+                                {user.nama || "Belum Terdaftar"}
+                              </div>
+                            </div>
+                            <div className="list-cell">
+                              <div className="list-label">NIM</div>
+                              <div className="list-value mono">{user.nim || "-"}</div>
+                            </div>
+                            <div className="list-cell">
+                              <div className="list-label">Bidang</div>
+                              <div className="list-value">{user.bidang || "-"}</div>
+                            </div>
+                            <div className="list-cell">
+                              <div className="list-label">Waktu</div>
+                              <div className="list-value">{row.waktu}</div>
+                            </div>
+                            <div className="list-cell status ms-auto">
+                              <div className="list-label">Status</div>
+                              <div className="list-value">
+                                <span className="status-dot green" /> Hadir
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
-              );
-            })}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Footer */}
+        <div className="footer-note">
+          <small>© {new Date().getFullYear()} Sistem Absensi Mahasiswa</small>
         </div>
       </div>
     </div>
