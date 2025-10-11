@@ -257,12 +257,6 @@ const AbsensiList = () => {
                       ➕ Daftarkan
                     </button>
                     <button
-                      className="btn btn-outline-amber btn-sm"
-                      onClick={() => handleDeleteAbsensi(row.uid)}
-                    >
-                      🧹 Hapus Absensi
-                    </button>
-                    <button
                       className="btn btn-outline-danger btn-sm"
                       onClick={() => handleDeleteUID(row.uid, "belum")}
                     >
@@ -314,12 +308,6 @@ const AbsensiList = () => {
                       </div>
                     </div>
                     <div className="list-cell actions ms-auto">
-                      <button
-                        className="btn btn-outline-amber btn-sm"
-                        onClick={() => handleDeleteAbsensi(row.uid)}
-                      >
-                        🧹 Hapus Absensi
-                      </button>
                       <button
                         className="btn btn-outline-danger btn-sm"
                         onClick={() => handleDeleteUID(row.uid, "terdaftar")}
