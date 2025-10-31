@@ -8,15 +8,31 @@ import "./logAbsen.css";
 const FIREBASE_URL =
   "https://absensi-organisasi-default-rtdb.asia-southeast1.firebasedatabase.app";
 
-// Fungsi ambil nama hari
+// Ambil angka pertama (1-2 digit) dari token, misal "09-00" -> "09", "error-16-00" -> "16"
+const extractFirstNumber = (token) => {
+  if (!token || typeof token !== "string") return null;
+  const m = token.match(/(\d{1,2})/);
+  return m ? String(Number(m[1])) : null; // normalize to no-leading-zero string
+};
+
+const pad2 = (n) => String(n).padStart(2, "0");
+
+const parseYMD = (ymd) => {
+  if (!ymd || typeof ymd !== "string") return null;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return null;
+  const [y, m, d] = ymd.split("-");
+  return new Date(Number(y), Number(m) - 1, Number(d));
+};
+
 const getDayName = (dateStr) => {
-  const date = new Date(dateStr);
+  const date = parseYMD(dateStr);
+  if (!date || isNaN(date.getTime())) return dateStr || "—";
   return date.toLocaleDateString("id-ID", { weekday: "long" });
 };
 
-// Fungsi format tanggal Indo
 const formatDate = (dateStr) => {
-  const date = new Date(dateStr);
+  const date = parseYMD(dateStr);
+  if (!date || isNaN(date.getTime())) return dateStr || "—";
   return date.toLocaleDateString("id-ID", {
     day: "numeric",
     month: "long",
@@ -31,31 +47,52 @@ const AbsensiLog = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Ambil absensi
         const res = await fetch(`${FIREBASE_URL}/absensi.json`);
         const json = await res.json();
 
-        // Ambil users hanya yang terdaftar
         const resUsers = await fetch(`${FIREBASE_URL}/users/terdaftar.json`);
         const jsonUsers = await resUsers.json();
         if (jsonUsers) setUsers(jsonUsers);
 
         if (json) {
           const formatted = [];
+          const problematic = [];
 
-          // Traverse struktur Firebase absensi
           Object.keys(json).forEach((tahun) => {
-            Object.keys(json[tahun]).forEach((bulan) => {
-              Object.keys(json[tahun][bulan]).forEach((minggu) => {
-                Object.keys(json[tahun][bulan][minggu]).forEach((hari) => {
-                  const uids = json[tahun][bulan][minggu][hari];
+            Object.keys(json[tahun] || {}).forEach((bulanToken) => {
+              Object.keys(json[tahun][bulanToken] || {}).forEach((minggu) => {
+                Object.keys(json[tahun][bulanToken][minggu] || {}).forEach((hariToken) => {
+                  const uids = json[tahun][bulanToken][minggu][hariToken];
+                  if (!uids || typeof uids !== "object") return;
                   Object.keys(uids).forEach((uid) => {
-                    formatted.push({
-                      id: uid + "-" + uids[uid].waktu,
-                      uid: uids[uid].uid,
-                      waktu: uids[uid].waktu,
-                      tanggal: `${tahun}-${bulan}-${hari}`, // yyyy-mm-dd
-                    });
+                    const entry = uids[uid] || {};
+                    // coba ekstrak angka dari token (tolerant)
+                    const monthNum = extractFirstNumber(bulanToken);
+                    const dayNum = extractFirstNumber(hariToken);
+
+                    let tanggalKey;
+                    let flagged = false;
+
+                    if (monthNum && dayNum) {
+                      tanggalKey = `${tahun}-${pad2(monthNum)}-${pad2(dayNum)}`;
+                    } else {
+                      // fallback: gunakan raw token sehingga tidak hilang,
+                      // juga tandai sebagai problematic
+                      tanggalKey = `${tahun}-${bulanToken}-${hariToken}`;
+                      flagged = true;
+                    }
+
+                    const item = {
+                      id: uid + "-" + (entry.waktu || ""),
+                      uid: entry.uid || uid,
+                      waktu: entry.waktu || "",
+                      tanggal: tanggalKey,
+                      rawKeys: { tahun, bulanToken, minggu, hariToken },
+                      flagged,
+                    };
+
+                    if (flagged) problematic.push(item);
+                    formatted.push(item);
                   });
                 });
               });
@@ -69,6 +106,10 @@ const AbsensiLog = () => {
             return acc;
           }, {});
 
+          console.info("[AbsensiLog] total entries:", formatted.length);
+          console.info("[AbsensiLog] problematic entries (flagged):", problematic);
+          console.info("[AbsensiLog] sample tanggalList:", Object.keys(grouped).slice(0, 50));
+
           setData(grouped);
         }
       } catch (err) {
@@ -80,16 +121,16 @@ const AbsensiLog = () => {
   }, []);
 
   // Download Excel khusus 1 hari
+  // Perubahan: file Excel hanya menyertakan nama, nim, bidang, waktu (tidak termasuk UID/rawPath)
   const downloadExcelPerHari = (tanggal) => {
     const rows = (data[tanggal] || []).map((row) => {
       const user = users[row.uid] || {};
       return {
         tanggal,
-        uid: row.uid,
         nama: user.nama || "Belum Terdaftar",
         nim: user.nim || "-",
         bidang: user.bidang || "-",
-        waktu: row.waktu,
+        waktu: row.waktu || "-",
       };
     });
     const ws = XLSX.utils.json_to_sheet(rows);
@@ -103,7 +144,6 @@ const AbsensiLog = () => {
   return (
     <div className="absensi-log-page">
       <div className="container-xl px-2 px-sm-3">
-        {/* Header */}
         <div className="page-header">
           <div className="title-wrap">
             <span className="badge-soft">Log</span>
@@ -116,10 +156,13 @@ const AbsensiLog = () => {
           <div className="empty-state my-3">Belum ada data absensi.</div>
         )}
 
-        {/* Accordion per tanggal */}
+        <div style={{ marginBottom: 12 }}>
+          <small>NOTE: entries flagged sebagai problematic akan menampilkan tanda "(problematic)" pada baris.</small>
+        </div>
+
         <div className="accordion glass-accordion" id="accordionAbsensi">
           {tanggalList.map((tanggal, index) => {
-            const rows = data[tanggal];
+            const rows = data[tanggal] || [];
             const dayName = getDayName(tanggal);
             const formattedDate = formatDate(tanggal);
             const collapseId = `collapse-${index}`;
@@ -161,16 +204,12 @@ const AbsensiLog = () => {
                       </button>
                     </div>
 
-                    {/* List-style rows */}
                     <div className="list-table">
                       {rows.map((row) => {
                         const user = users[row.uid] || {};
                         return (
                           <div key={row.id} className="list-row">
-                            <div className="list-cell">
-                              <div className="list-label">UID</div>
-                              <div className="list-value mono">{row.uid}</div>
-                            </div>
+                            {/* UID column removed as requested */}
                             <div className="list-cell">
                               <div className="list-label">Nama</div>
                               <div className="list-value fw-semibold">
@@ -189,6 +228,9 @@ const AbsensiLog = () => {
                               <div className="list-label">Waktu</div>
                               <div className="list-value">{row.waktu}</div>
                             </div>
+
+                            {/* Raw Path column removed as requested */}
+
                             <div className="list-cell status ms-auto">
                               <div className="list-label">Status</div>
                               <div className="list-value">
@@ -206,7 +248,6 @@ const AbsensiLog = () => {
           })}
         </div>
 
-        {/* Footer */}
         <div className="footer-note">
           <small>© {new Date().getFullYear()} Sistem Absensi Mahasiswa</small>
         </div>
