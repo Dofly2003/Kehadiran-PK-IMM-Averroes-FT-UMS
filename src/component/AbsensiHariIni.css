@@ -1,5 +1,5 @@
 :root {
-  /* Ganti background: biru-ungu ke teal-ungu */
+  /* Tema warna */
   --bg-start: #071a2c;
   --bg-end: #1b1033;
   --accent-blue: #60a5fa;
@@ -17,7 +17,7 @@
   --radius-sm: 10px;
 }
 
-/* Page background baru */
+/* ===== PAGE ===== */
 .absensi-today-page {
   min-height: 100vh;
   padding: clamp(16px, 2vw, 24px);
@@ -28,7 +28,7 @@
   color: var(--text);
 }
 
-/* Header */
+/* ===== HEADER ===== */
 .page-header {
   max-width: 1100px;
   margin: 0 auto 12px auto;
@@ -56,13 +56,10 @@
   background-clip: text;
   color: transparent;
 }
-.page-subtitle {
-  margin: 0;
-  color: var(--muted);
-}
+.page-subtitle { margin: 0; color: var(--muted); }
 .header-actions { display: flex; gap: 10px; }
 
-/* Stats */
+/* ===== STATS ===== */
 .stats {
   max-width: 1100px;
   margin: 10px auto;
@@ -79,28 +76,27 @@
   display: grid;
   gap: 4px;
 }
-.stat-label {
-  color: var(--muted);
-  font-size: 0.9rem;
-}
-.stat-value {
-  font-size: 1.6rem;
-  font-weight: 800;
-}
+.stat-label { color: var(--muted); font-size: 0.9rem; }
+.stat-value { font-size: 1.6rem; font-weight: 800; }
 .stat-green { outline: 1px solid rgba(34,197,94,.35); }
 .stat-red { outline: 1px solid rgba(239,68,68,.35); }
 
-/* Grid two columns */
+/* ===== GRID SECTION ===== */
 .grid-2 {
   max-width: 1100px;
   margin: 14px auto;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
+  display: flex;
+  gap: 16px;
+  align-items: stretch;
+  justify-content: space-between;
 }
 
 /* Section card */
 .section-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
   background: var(--glass);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius);
@@ -109,6 +105,7 @@
   -webkit-backdrop-filter: blur(10px);
   overflow: hidden;
 }
+
 .section-header {
   display: flex;
   align-items: center;
@@ -127,102 +124,92 @@
 .dot.red { background: var(--accent-red); }
 
 .count-pill {
-  font-size: .8rem;
-  padding: 6px 10px;
-  border-radius: 999px;
-  border: 1px solid var(--glass-border);
-  background: rgba(255,255,255,.06);
+  font-size: .8rem; padding: 6px 10px; border-radius: 999px;
+  border: 1px solid var(--glass-border); background: rgba(255,255,255,.06);
 }
 .count-pill.green { color: #d1fae5; }
 .count-pill.red { color: #fee2e2; }
 
-/* List-table style */
+/* ===== LIST TABLE ===== */
 .list-table {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 10px 12px 14px;
+  gap: 12px;
+  padding: 0;                  /* full-bleed agar baris selebar card */
+  flex: 1;
 }
+
 .list-row {
-  display: flex;
+  display: flex;               /* tetap ROW di semua ukuran */
   align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-  padding: 14px 12px;
+  justify-content: space-between;
+  flex-wrap: wrap;             /* boleh wrap bila sangat sempit */
+  gap: 12px;
+  width: 100%;                 /* selebar card induk */
+  padding: 14px 16px;          /* samakan rasa padding dengan stat-card */
   border: 1px solid rgba(255,255,255,.08);
-  border-radius: 14px;
+  border-radius: var(--radius);/* radius sama seperti card */
   background: rgba(255,255,255,.03);
   transition: background .2s ease, border-color .2s ease, transform .05s ease;
 }
-.list-row:hover {
-  background: rgba(255,255,255,.06);
-  border-color: rgba(255,255,255,.14);
-}
+.list-row:hover { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.14); }
 .list-row:active { transform: scale(.998); }
 
+/* gunakan .list-cell untuk SEMUA kolom */
 .list-cell {
-  min-width: 160px;
+  flex: 1 1 33.333%;           /* tiga kolom bagi rata */
+  min-width: 0;                /* cegah overflow, biar ikut lebar card */
   display: grid;
   gap: 6px;
 }
-.list-cell.status { min-width: 160px; }
 .list-label {
   font-size: .78rem;
   color: var(--muted);
   letter-spacing: .2px;
 }
 .list-value {
-  font-size: .98rem;
+  font-size: .95rem;
   color: var(--text);
+  overflow-wrap: anywhere;     /* cegah meluber di layar kecil */
 }
 .mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   font-variant-numeric: tabular-nums;
 }
 
-/* Status dot */
-.status-dot {
-  width: 8px; height: 8px;
-  border-radius: 999px;
-  display: inline-block;
-  margin-right: 8px;
-}
-.status-dot.green { background: var(--accent-green); }
-.status-dot.gray { background: #9ca3af; }
-
-/* Buttons */
-.btn {
-  border-radius: var(--radius-sm);
-  border-width: 1px;
-  font-weight: 600;
-}
+/* ===== BUTTONS ===== */
+.btn { border-radius: var(--radius-sm); border-width: 1px; font-weight: 600; }
 .btn-gradient {
-  color: #0b1224;
-  border: none;
+  color: #0b1224; border: none;
   background: linear-gradient(90deg, #60a5fa, #a78bfa, #fef08a);
   background-size: 200% 100%;
   transition: transform .1s ease, box-shadow .2s ease, background-position .6s ease;
   padding: 8px 14px;
 }
-.btn-gradient:hover {
-  transform: translateY(-1px);
-  background-position: 100% 0;
-  box-shadow: 0 10px 20px rgba(99,102,241,.25);
-}
+.btn-gradient:hover { transform: translateY(-1px); background-position: 100% 0; box-shadow: 0 10px 20px rgba(99,102,241,.25); }
 
-/* Footer */
-.footer-note {
-  max-width: 1100px;
-  margin: 18px auto 0 auto;
-  text-align: center;
-  color: var(--muted);
-}
+/* ===== FOOTER ===== */
+.footer-note { max-width: 1100px; margin: 18px auto 0 auto; text-align: center; color: var(--muted); }
 
-/* Responsive */
+/* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
-  .grid-2 { grid-template-columns: 1fr; }
+  .grid-2 { flex-direction: column; }
+  .grid-2 > .section-card { width: 100%; }  /* pastikan lebar penuh seperti stats */
+  .section-card { margin-bottom: 8px; }
+  .header-actions { width: 100%; }
+  .btn-gradient { width: 100%; }
+
+  /* Tetap row di mobile, bagi rata 3 kolom */
+  .list-row { flex-direction: row; align-items: center; }
+  .list-cell { flex: 1 1 33.333%; min-width: 0; }
 }
-@media (max-width: 576px) {
-  .list-cell { min-width: 130px; }
-  .page-header { margin-bottom: 8px; }
+
+@media (max-width: 480px) {
+  .stats { grid-template-columns: 1fr; }  /* stat-card jadi 1 kolom */
+  .page-title { font-size: 1.25rem; }
+  .stat-value { font-size: 1.4rem; }
+
+  /* Sedikit kecilkan font agar tetap muat */
+  .list-label { font-size: .72rem; }
+  .list-value { font-size: .9rem; }
 }

@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { db } from "../firebase";
 import { ref, onValue, set, remove, update, get } from "firebase/database";
 import "bootstrap/dist/css/bootstrap.min.css";
-import "./AbsensiList.css"; // tampilan fresh list-style
+import "./AbsensiList.css"; // gunakan file css yang dikirim
 
 const AbsensiList = () => {
   const [data, setData] = useState([]);
@@ -234,7 +234,11 @@ const AbsensiList = () => {
               <div className="empty-state">Semua UID sudah terdaftar 🎉</div>
             ) : (
               belumTerdaftar.map((row) => (
-                <div key={row.id} className="list-row">
+                <div key={row.id} className="list-row row-nowrap">
+                  <div className="list-cell">
+                    <div className="list-label">Nama</div>
+                    <div className="list-value fw-semibold">{row.nama}</div>
+                  </div>
                   <div className="list-cell">
                     <div className="list-label">UID</div>
                     <div className="list-value mono">{row.uid}</div>
@@ -282,20 +286,19 @@ const AbsensiList = () => {
               <div className="empty-state">Belum ada data terdaftar</div>
             ) : (
               sudahTerdaftar.map((row) => {
-                const user = users.terdaftar[row.uid] || {};
                 return (
-                  <div key={row.id} className="list-row">
+                  <div key={row.id} className="list-row row-nowrap">
                     <div className="list-cell">
                       <div className="list-label">Nama</div>
-                      <div className="list-value fw-semibold">{user.nama}</div>
+                      <div className="list-value fw-semibold">{row.nama}</div>
                     </div>
                     <div className="list-cell">
                       <div className="list-label">NIM</div>
-                      <div className="list-value mono">{user.nim}</div>
+                      <div className="list-value mono">{row.nim}</div>
                     </div>
                     <div className="list-cell">
                       <div className="list-label">Bidang</div>
-                      <div className="list-value">{user.bidang}</div>
+                      <div className="list-value">{row.bidang}</div>
                     </div>
                     <div className="list-cell">
                       <div className="list-label">Waktu</div>

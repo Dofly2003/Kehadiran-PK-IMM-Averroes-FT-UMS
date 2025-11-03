@@ -5,6 +5,7 @@ import { ref, onValue } from "firebase/database";
 import "bootstrap/dist/css/bootstrap.min.css";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+// Pakai nama file CSS yang Anda kirim
 import "./AbsensiHariIni.css";
 
 // Helper: cari minggu ke berapa
@@ -49,7 +50,12 @@ const AbsensiHariIni = () => {
     waktu: absensiHariIni[uid]?.waktu || "-",
   }));
 
-  sudahHadir.sort((a, b) => new Date(b.waktu) - new Date(a.waktu));
+  // Sort by waktu terbaru (fallback jika waktu tidak valid)
+  sudahHadir.sort((a, b) => {
+    const ta = Date.parse(a.waktu) || 0;
+    const tb = Date.parse(b.waktu) || 0;
+    return tb - ta;
+  });
 
   const belumHadir = Object.entries(users)
     .filter(([uid]) => !hadirUIDs.includes(uid))
@@ -58,6 +64,23 @@ const AbsensiHariIni = () => {
   // Ringkasan
   const totalSudah = sudahHadir.length;
   const totalBelum = belumHadir.length;
+
+  // Buat tanggal dari variabel tahun, bulan, hari
+  const date = new Date(`${tahun}-${bulan}-${hari}`);
+
+  // Nama hari dalam bahasa Indonesia
+  const hariList = [
+    "Minggu",
+    "Senin",
+    "Selasa",
+    "Rabu",
+    "Kamis",
+    "Jumat",
+    "Sabtu",
+  ];
+
+  // Ambil nama hari sesuai index dari getDay()
+  const namaHari = hariList[date.getDay()];
 
   // === Export ke Excel ===
   const exportToExcel = () => {
@@ -92,6 +115,9 @@ const AbsensiHariIni = () => {
     saveAs(data, `Absensi_${tahun}-${bulan}-${hari}.xlsx`);
   };
 
+  // Helper tampilkan hanya jam dari string "YYYY-MM-DD HH:mm:ss"
+  const onlyTime = (str) => (str && str.includes(" ") ? str.split(" ")[1] : str || "-");
+
   return (
     <div className="absensi-today-page">
       <div className="container-xl px-2 px-sm-3">
@@ -101,11 +127,11 @@ const AbsensiHariIni = () => {
             <span className="badge-soft">Monitoring</span>
             <h2 className="page-title">📋 Monitoring Absensi</h2>
             <p className="page-subtitle">
-              {tahun}-{bulan}-{hari} • {minggu}
+              {namaHari}, {tahun}-{bulan}-{hari}
             </p>
           </div>
           <div className="header-actions">
-            <button className="btn btn-gradient" onClick={exportToExcel}>
+            <button className="btn btn-gradient w-100 w-sm-auto" onClick={exportToExcel}>
               📥 Download Excel
             </button>
           </div>
@@ -147,7 +173,7 @@ const AbsensiHariIni = () => {
                     </div>
                     <div className="list-cell">
                       <div className="list-label">Waktu</div>
-                      <div className="list-value">{row.waktu || "-"}</div>
+                      <div className="list-value">{onlyTime(row.waktu)}</div>
                     </div>
                   </div>
                 ))

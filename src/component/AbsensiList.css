@@ -1,6 +1,6 @@
 :root {
   --bg-start: #0b1023;
-  --bg-end: #1a1033;          /* ganti background: ungu tua ke navy */
+  --bg-end: #1a1033;
   --accent-blue: #3b82f6;
   --accent-amber: #f59e0b;
   --accent-green: #22c55e;
@@ -14,7 +14,7 @@
   --shadow: 0 10px 30px rgba(0,0,0,0.35);
 }
 
-/* Page background baru */
+/* Page */
 .absensi-page {
   min-height: 100vh;
   padding: clamp(16px, 2vw, 24px);
@@ -26,116 +26,84 @@
 }
 
 /* Header */
-.page-header {
-  max-width: 1100px;
-  margin: 0 auto 12px auto;
-}
+.page-header { max-width: 1100px; margin: 0 auto 12px auto; }
 .badge-soft {
-  display: inline-block;
-  font-size: .78rem;
-  padding: 4px 10px;
-  border-radius: 999px;
-  color: #c7d2fe;
-  background: rgba(99,102,241,.18);
-  border: 1px solid rgba(99,102,241,.25);
+  display: inline-block; font-size: .78rem; padding: 4px 10px; border-radius: 999px;
+  color: #c7d2fe; background: rgba(99,102,241,.18); border: 1px solid rgba(99,102,241,.25);
 }
 .page-title {
-  margin: 8px 0 4px;
-  font-weight: 800;
-  letter-spacing: .2px;
+  margin: 8px 0 4px; font-weight: 800; letter-spacing: .2px;
   background: linear-gradient(90deg, #c7d2fe, #93c5fd, #fef08a);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
 }
-.page-subtitle {
-  margin: 0;
-  color: var(--muted);
-}
+.page-subtitle { margin: 0; color: var(--muted); }
 
 /* Section card */
 .section-card {
-  max-width: 1100px;
-  margin: 14px auto;
-  background: var(--glass);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  max-width: 1100px; margin: 14px auto;
+  background: var(--glass); border: 1px solid var(--glass-border);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
   overflow: hidden;
 }
 .section-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 14px 16px;
-  font-weight: 700;
+  display: flex; align-items: center; gap: 10px; padding: 14px 16px; font-weight: 700;
 }
 .section-header.blue { background: linear-gradient(90deg, rgba(59,130,246,.12), transparent); }
 .section-header.amber { background: linear-gradient(90deg, rgba(245,158,11,.12), transparent); }
 
-.dot {
-  width: 10px; height: 10px; border-radius: 999px;
-  box-shadow: 0 0 0 4px rgba(255,255,255,.05);
-}
+.dot { width: 10px; height: 10px; border-radius: 999px; box-shadow: 0 0 0 4px rgba(255,255,255,.05); }
 .dot.blue { background: var(--accent-blue); }
 .dot.amber { background: var(--accent-amber); }
 
 .count-pill {
-  font-size: .8rem;
-  padding: 6px 10px;
-  border-radius: 999px;
-  border: 1px solid var(--glass-border);
-  background: rgba(255,255,255,.06);
+  font-size: .8rem; padding: 6px 10px; border-radius: 999px;
+  border: 1px solid var(--glass-border); background: rgba(255,255,255,.06);
 }
 .count-pill.blue { color: #cfe4ff; }
 .count-pill.amber { color: #ffe6b3; }
 
-/* List-table (gaya seperti referensi) */
+/* List-table */
 .list-table {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  display: flex; flex-direction: column; gap: 10px;
   padding: 10px 12px 14px;
 }
 
+/* Baris selebar card, tetap ROW */
 .list-row {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;                /* responsif */
-  padding: 14px 12px;
+  display: flex; align-items: center; gap: 16px;
+  flex-wrap: wrap;              /* default boleh wrap */
+  width: 100%;
+  padding: 14px 16px;
   border: 1px solid rgba(255,255,255,.08);
-  border-radius: 14px;
+  border-radius: var(--radius);
   background: rgba(255,255,255,.03);
   transition: background .2s ease, border-color .2s ease, transform .05s ease;
 }
-.list-row:hover {
-  background: rgba(255,255,255,.06);
-  border-color: rgba(255,255,255,.14);
-}
+.list-row:hover { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.14); }
 .list-row:active { transform: scale(.998); }
 
+/* Paksa selalu horizontal (tanpa wrap) */
+.list-row.row-nowrap { flex-wrap: nowrap; }
+
+/* Kolom: bagi rata, bisa mengecil, tidak overflow */
 .list-cell {
-  min-width: 160px;
+  flex: 1 1 0;
+  min-width: 0;
   display: grid;
   gap: 6px;
 }
 .list-cell.actions {
-  margin-left: auto;              /* dorong aksi ke kanan di layar lebar */
+  flex: 0 0 auto;
+  margin-left: auto;            /* dorong ke kanan */
   display: inline-flex;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
-.list-label {
-  font-size: .78rem;
-  color: var(--muted);
-  letter-spacing: .2px;
-}
+.list-label { font-size: .78rem; color: var(--muted); letter-spacing: .2px; }
 .list-value {
-  font-size: .98rem;
-  color: var(--text);
+  font-size: .98rem; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; /* rapi di layar kecil */
 }
 .mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -143,73 +111,43 @@
 }
 
 /* Status dot */
-.status-dot {
-  width: 8px; height: 8px;
-  border-radius: 999px;
-  display: inline-block;
-  margin-right: 8px;
-}
+.status-dot { width: 8px; height: 8px; border-radius: 999px; display: inline-block; margin-right: 8px; }
 .status-dot.green { background: var(--accent-green); }
 .status-dot.gray { background: #9ca3af; }
 
 /* Empty state */
 .empty-state {
-  padding: 18px 10px;
-  text-align: center;
-  color: var(--muted);
-  border: 1px dashed rgba(255,255,255,.15);
-  border-radius: 12px;
-  background: rgba(255,255,255,.03);
+  padding: 18px 10px; text-align: center; color: var(--muted);
+  border: 1px dashed rgba(255,255,255,.15); border-radius: 12px; background: rgba(255,255,255,.03);
 }
 
 /* Buttons */
-.btn {
-  border-radius: var(--radius-sm);
-  border-width: 1px;
-  font-weight: 600;
-}
+.btn { border-radius: var(--radius-sm); border-width: 1px; font-weight: 600; }
 .btn-sm { padding: 6px 10px; }
 .btn-gradient {
-  color: #0b1224;
-  border: none;
+  color: #0b1224; border: none;
   background: linear-gradient(90deg, #60a5fa, #a78bfa, #fef08a);
   background-size: 200% 100%;
   transition: transform .1s ease, box-shadow .2s ease, background-position .6s ease;
 }
-.btn-gradient:hover {
-  transform: translateY(-1px);
-  background-position: 100% 0;
-  box-shadow: 0 10px 20px rgba(99,102,241,.25);
-}
-.btn-outline-amber {
-  color: #fde68a;
-  border-color: rgba(245,158,11,.45);
-  background: transparent;
-}
+.btn-gradient:hover { transform: translateY(-1px); background-position: 100% 0; box-shadow: 0 10px 20px rgba(99,102,241,.25); }
+.btn-outline-amber { color: #fde68a; border-color: rgba(245,158,11,.45); background: transparent; }
 .btn-outline-amber:hover { background: rgba(245,158,11,.12); }
-.btn-outline-danger {
-  color: #fecaca;
-  border-color: rgba(239,68,68,.45);
-  background: transparent;
-}
+.btn-outline-danger { color: #fecaca; border-color: rgba(239,68,68,.45); background: transparent; }
 .btn-outline-danger:hover { background: rgba(239,68,68,.12); }
 
 /* Modal */
 .modal-glass {
   background: linear-gradient(180deg, rgba(9,12,23,.92), rgba(9,12,23,.88));
-  border: 1px solid var(--glass-border);
-  color: var(--text);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  border: 1px solid var(--glass-border); color: var(--text);
+  border-radius: var(--radius); box-shadow: var(--shadow);
 }
 .modal-header-gradient {
   background: linear-gradient(90deg, rgba(59,130,246,.18), rgba(245,158,11,.18));
   border-bottom: 1px solid var(--glass-border);
 }
 .form-control.pill {
-  border-radius: 999px;
-  background: rgba(255,255,255,.06);
-  color: var(--text);
+  border-radius: 999px; background: rgba(255,255,255,.06); color: var(--text);
   border: 1px solid rgba(255,255,255,.12);
 }
 .form-control.pill:focus {
@@ -218,8 +156,9 @@
   box-shadow: 0 0 0 2px rgba(99,102,241,.25);
 }
 
-/* Responsif */
+/* Responsif (tetap row, kecilkan font jika perlu) */
 @media (max-width: 576px) {
-  .list-cell { min-width: 130px; }
   .page-header { margin-bottom: 8px; }
+  .list-label { font-size: .72rem; }
+  .list-value { font-size: .92rem; }
 }
