@@ -149,12 +149,6 @@ const AbsensiHariIni = () => {
                       <div className="list-label">Waktu</div>
                       <div className="list-value">{row.waktu || "-"}</div>
                     </div>
-                    <div className="list-cell status ms-auto">
-                      <div className="list-label">Status</div>
-                      <div className="list-value">
-                        <span className="status-dot green" /> Hadir
-                      </div>
-                    </div>
                   </div>
                 ))
               )}
@@ -181,12 +175,6 @@ const AbsensiHariIni = () => {
                     <div className="list-cell">
                       <div className="list-label">NIM</div>
                       <div className="list-value mono">{row.nim || "-"}</div>
-                    </div>
-                    <div className="list-cell status ms-auto">
-                      <div className="list-label">Status</div>
-                      <div className="list-value">
-                        <span className="status-dot gray" /> Belum hadir
-                      </div>
                     </div>
                   </div>
                 ))
