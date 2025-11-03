@@ -138,10 +138,6 @@ const AbsensiHariIni = () => {
                 sudahHadir.map((row) => (
                   <div key={row.uid} className="list-row">
                     <div className="list-cell">
-                      <div className="list-label">UID</div>
-                      <div className="list-value mono">{row.uid}</div>
-                    </div>
-                    <div className="list-cell">
                       <div className="list-label">Nama</div>
                       <div className="list-value fw-semibold">{row.nama || "-"}</div>
                     </div>
@@ -150,12 +146,8 @@ const AbsensiHariIni = () => {
                       <div className="list-value mono">{row.nim || "-"}</div>
                     </div>
                     <div className="list-cell">
-                      <div className="list-label">Bidang</div>
-                      <div className="list-value">{row.bidang || "-"}</div>
-                    </div>
-                    <div className="list-cell">
                       <div className="list-label">Waktu</div>
-                      <div className="list-value">{row.waktu}</div>
+                      <div className="list-value">{row.waktu || "-"}</div>
                     </div>
                     <div className="list-cell status ms-auto">
                       <div className="list-label">Status</div>
@@ -183,20 +175,12 @@ const AbsensiHariIni = () => {
                 belumHadir.map((row) => (
                   <div key={row.uid} className="list-row">
                     <div className="list-cell">
-                      <div className="list-label">UID</div>
-                      <div className="list-value mono">{row.uid}</div>
-                    </div>
-                    <div className="list-cell">
                       <div className="list-label">Nama</div>
                       <div className="list-value fw-semibold">{row.nama || "-"}</div>
                     </div>
                     <div className="list-cell">
                       <div className="list-label">NIM</div>
                       <div className="list-value mono">{row.nim || "-"}</div>
-                    </div>
-                    <div className="list-cell">
-                      <div className="list-label">Bidang</div>
-                      <div className="list-value">{row.bidang || "-"}</div>
                     </div>
                     <div className="list-cell status ms-auto">
                       <div className="list-label">Status</div>
