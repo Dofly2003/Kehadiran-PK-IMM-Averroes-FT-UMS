@@ -69,10 +69,10 @@
   padding: 10px 12px 14px;
 }
 
-/* Baris selebar card, tetap ROW */
+/* Baris selebar card, default flex row di desktop */
 .list-row {
   display: flex; align-items: center; gap: 16px;
-  flex-wrap: wrap;              /* default boleh wrap */
+  flex-wrap: wrap;
   width: 100%;
   padding: 14px 16px;
   border: 1px solid rgba(255,255,255,.08);
@@ -83,19 +83,19 @@
 .list-row:hover { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.14); }
 .list-row:active { transform: scale(.998); }
 
-/* Paksa selalu horizontal (tanpa wrap) */
+/* Opsional: paksa no-wrap di desktop saja */
 .list-row.row-nowrap { flex-wrap: nowrap; }
 
-/* Kolom: bagi rata, bisa mengecil, tidak overflow */
+/* Kolom di desktop: fleksibel */
 .list-cell {
   flex: 1 1 0;
-  min-width: 0;
+  min-width: 160px;
   display: grid;
   gap: 6px;
 }
 .list-cell.actions {
   flex: 0 0 auto;
-  margin-left: auto;            /* dorong ke kanan */
+  margin-left: auto;
   display: inline-flex;
   gap: 8px;
   flex-wrap: nowrap;
@@ -103,7 +103,7 @@
 .list-label { font-size: .78rem; color: var(--muted); letter-spacing: .2px; }
 .list-value {
   font-size: .98rem; color: var(--text);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; /* rapi di layar kecil */
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; /* rapi di layar lebar */
 }
 .mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -156,9 +156,48 @@
   box-shadow: 0 0 0 2px rgba(99,102,241,.25);
 }
 
-/* Responsif (tetap row, kecilkan font jika perlu) */
+/* Responsif — ubah baris jadi GRID 2 kolom di mobile agar tidak nabrak */
 @media (max-width: 576px) {
   .page-header { margin-bottom: 8px; }
+
+  /* Ganti flex -> grid untuk list-row di mobile */
+  .list-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;   /* 2 kolom */
+    gap: 10px 12px;
+    align-items: start;
+  }
+
+  /* Abaikan no-wrap di mobile */
+  .list-row.row-nowrap { display: grid; }
+
+  /* Kolom adaptif, tidak dipaksa min-width */
+  .list-cell {
+    min-width: 0;
+    flex: unset;          /* nonaktifkan aturan flex di mobile */
+    width: 100%;
+  }
+
+  /* Urutan HTML: Nama | NIM | Bidang | Waktu | Status | Actions
+     Dengan 2 kolom, otomatis menjadi:
+     R1: Nama (col1), NIM (col2)
+     R2: Bidang (col1), Waktu (col2)
+     R3: Status (col1), Actions (col2)
+  */
+  .list-cell.actions {
+    margin-left: 0;
+    justify-self: end;    /* tombol rapat kanan */
+    gap: 6px;
+  }
+
+  /* Izinkan teks membungkus agar tidak tumpuk */
+  .list-value {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  /* Sedikit kecilkan font agar muat */
   .list-label { font-size: .72rem; }
   .list-value { font-size: .92rem; }
 }
