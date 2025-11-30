@@ -12,6 +12,19 @@
   --radius: 16px;
   --radius-sm: 10px;
   --shadow: 0 10px 30px rgba(0,0,0,0.35);
+
+  /* Modern modal tokens */
+  --modal-glass-start: rgba(10,14,25,0.92);
+  --modal-glass-end: rgba(10,14,25,0.88);
+  --modal-border: rgba(147, 197, 253, 0.25);
+  --modal-blur: 14px;
+  --modal-radius: 18px;
+  --title-gradient: linear-gradient(90deg, #c7d2fe, #93c5fd);
+  --subtitle-color: #9fb7ff;
+  --input-bg: rgba(255,255,255,.07);
+  --input-border: rgba(255,255,255,.14);
+  --input-focus-border: rgba(99,102,241,.55);
+  --input-focus-ring: rgba(99,102,241,.28);
 }
 
 /* Page */
@@ -69,7 +82,7 @@
   padding: 10px 12px 14px;
 }
 
-/* Baris selebar card, default flex row di desktop */
+/* List rows */
 .list-row {
   display: flex; align-items: center; gap: 16px;
   flex-wrap: wrap;
@@ -82,11 +95,8 @@
 }
 .list-row:hover { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.14); }
 .list-row:active { transform: scale(.998); }
-
-/* Opsional: paksa no-wrap di desktop saja */
 .list-row.row-nowrap { flex-wrap: nowrap; }
 
-/* Kolom di desktop: fleksibel */
 .list-cell {
   flex: 1 1 0;
   min-width: 160px;
@@ -103,7 +113,7 @@
 .list-label { font-size: .78rem; color: var(--muted); letter-spacing: .2px; }
 .list-value {
   font-size: .98rem; color: var(--text);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; /* rapi di layar lebar */
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -136,18 +146,63 @@
 .btn-outline-danger { color: #fecaca; border-color: rgba(239,68,68,.45); background: transparent; }
 .btn-outline-danger:hover { background: rgba(239,68,68,.12); }
 
-/* Modal */
+/* ========== Base Modal (glass) for compatibility ========== */
 .modal-glass {
-  background: linear-gradient(180deg, rgba(9,12,23,.92), rgba(9,12,23,.88));
-  border: 1px solid var(--glass-border); color: var(--text);
-  border-radius: var(--radius); box-shadow: var(--shadow);
+  background: linear-gradient(180deg, var(--modal-glass-start), var(--modal-glass-end));
+  border: 1px solid var(--glass-border);
+  color: var(--text);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
 }
-.modal-header-gradient {
-  background: linear-gradient(90deg, rgba(59,130,246,.18), rgba(245,158,11,.18));
+.modern-modal {
+  border-radius: var(--modal-radius);
+  backdrop-filter: blur(var(--modal-blur));
+  -webkit-backdrop-filter: blur(var(--modal-blur));
+  border: 1px solid var(--modal-border);
+}
+
+/* Header (clean) */
+.modal-header-clean {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px;
   border-bottom: 1px solid var(--glass-border);
+  background:
+    radial-gradient(600px 200px at 0% 0%, rgba(99,102,241,.18), transparent 60%),
+    radial-gradient(600px 200px at 100% 0%, rgba(245,158,11,.12), transparent 60%);
 }
+.modal-title-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.modern-title {
+  margin: 0;
+  font-weight: 800;
+  letter-spacing: .2px;
+  color: var(--text); /* solid text (no gradient) */
+}
+.modern-subtitle {
+  font-size: .9rem;
+  color: var(--subtitle-color);
+  padding: 2px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(147,197,253,.25);
+  background: rgba(147,197,253,.08);
+}
+.modern-close { filter: drop-shadow(0 2px 4px rgba(0,0,0,.25)); }
+
+/* Body */
+.modern-body { padding: 16px 18px; }
+.modern-label { color: var(--muted); }
+
+/* Inputs (rounded pill baseline) */
 .form-control.pill {
-  border-radius: 999px; background: rgba(255,255,255,.06); color: var(--text);
+  border-radius: 999px;
+  background: rgba(255,255,255,.06);
+  color: var(--text);
   border: 1px solid rgba(255,255,255,.12);
 }
 .form-control.pill:focus {
@@ -156,48 +211,98 @@
   box-shadow: 0 0 0 2px rgba(99,102,241,.25);
 }
 
+/* ========== Flat Modal Overrides (requested style) ========== */
+.flat-modal {
+  border-radius: 12px;                /* rounded ringan */
+  background: #0f1529;               /* flat solid background */
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.35);
+  backdrop-filter: none;              /* hilangkan blur */
+  -webkit-backdrop-filter: none;
+}
+.flat-modal-header {
+  background: #0f1529;               /* flat sama dengan body */
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+  padding: 16px 18px;
+}
+.flat-modal-footer {
+  background: #0f1529;               /* flat sama */
+  border-top: 1px solid rgba(255,255,255,0.10);
+  padding: 14px 18px;
+}
+
+/* Flat inputs: kotak dengan rounded ringan dan background flat */
+.form-control.flat-input {
+  border-radius: 8px;                 /* rounded ringan */
+  background: #0b1224;                /* flat, sedikit lebih gelap dari modal */
+  color: var(--text);
+  border: 1px solid rgba(255,255,255,.14);
+  padding: 10px 12px;
+  transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.form-control.flat-input::placeholder {
+  color: rgba(232,238,255,.6);
+}
+.form-control.flat-input:focus {
+  background: #0c152b;                /* tetap flat saat fokus */
+  border-color: var(--input-focus-border);
+  box-shadow: 0 0 0 2px var(--input-focus-ring);
+  outline: none;
+}
+/* Jika masih ada class pill, paksa radius jadi 8px agar kotak */
+.form-control.pill.flat-input { border-radius: 8px; }
+
+/* Ghost button selaras flat */
+.btn.btn-ghost {
+  color: #cbd5ff;
+  border: 1px solid rgba(255,255,255,.12);
+  background: #0b1224;
+}
+.btn.btn-ghost:hover { background: #0c152b; }
+
+/* Footer (modern baseline) */
+.modern-footer {
+  padding: 14px 18px;
+  border-top: 1px solid var(--glass-border);
+  background: rgba(255,255,255,.03);
+}
+
 /* Responsif — ubah baris jadi GRID 2 kolom di mobile agar tidak nabrak */
 @media (max-width: 576px) {
   .page-header { margin-bottom: 8px; }
 
-  /* Ganti flex -> grid untuk list-row di mobile */
   .list-row {
     display: grid;
     grid-template-columns: 1fr 1fr;   /* 2 kolom */
     gap: 10px 12px;
     align-items: start;
   }
-
-  /* Abaikan no-wrap di mobile */
   .list-row.row-nowrap { display: grid; }
 
-  /* Kolom adaptif, tidak dipaksa min-width */
   .list-cell {
     min-width: 0;
     flex: unset;          /* nonaktifkan aturan flex di mobile */
     width: 100%;
   }
 
-  /* Urutan HTML: Nama | NIM | Bidang | Waktu | Status | Actions
-     Dengan 2 kolom, otomatis menjadi:
-     R1: Nama (col1), NIM (col2)
-     R2: Bidang (col1), Waktu (col2)
-     R3: Status (col1), Actions (col2)
-  */
   .list-cell.actions {
     margin-left: 0;
     justify-self: end;    /* tombol rapat kanan */
     gap: 6px;
   }
 
-  /* Izinkan teks membungkus agar tidak tumpuk */
   .list-value {
     white-space: normal;
     overflow: visible;
     text-overflow: clip;
   }
 
-  /* Sedikit kecilkan font agar muat */
   .list-label { font-size: .72rem; }
   .list-value { font-size: .92rem; }
+
+  /* Modal padding lebih kompak di mobile */
+  .modern-body { padding: 14px 14px; }
+  .modern-footer { padding: 12px 14px; }
+  .flat-modal-header { padding: 14px 14px; }
+  .flat-modal-footer { padding: 12px 14px; }
 }

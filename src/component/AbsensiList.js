@@ -85,7 +85,7 @@ const AbsensiList = () => {
     if (!selectedUID) return;
 
     if (users.terdaftar[selectedUID]?.nama) {
-      alert("⚠ UID ini sudah terdaftar!");
+      alert("UID ini sudah terdaftar!");
       setSelectedUID(null);
       setFormData({ nama: "", nim: "", bidang: "" });
       return;
@@ -104,12 +104,12 @@ const AbsensiList = () => {
 
       await remove(ref(db, "users/belum_terdaftar/" + selectedUID));
 
-      alert("✅ User berhasil didaftarkan!");
+      alert("User berhasil didaftarkan!");
       setSelectedUID(null);
       setFormData({ nama: "", nim: "", bidang: "" });
     } catch (err) {
       console.error("Gagal daftar:", err);
-      alert("❌ Gagal mendaftarkan user. Periksa console.");
+      alert("Gagal mendaftarkan user. Periksa console.");
     }
   };
 
@@ -122,10 +122,10 @@ const AbsensiList = () => {
         } else if (type === "terdaftar") {
           await remove(ref(db, "users/terdaftar/" + uid));
         }
-        alert("🗑 UID berhasil dihapus!");
+        alert("UID berhasil dihapus!");
       } catch (err) {
         console.error("Gagal hapus UID:", err);
-        alert("❌ Gagal menghapus UID. Periksa console.");
+        alert("Gagal menghapus UID. Periksa console.");
       }
     }
   };
@@ -169,13 +169,13 @@ const AbsensiList = () => {
     try {
       const deleted = await deleteAbsensiByUID(uid);
       if (deleted > 0) {
-        alert(`🧹 Berhasil menghapus ${deleted} entri absensi untuk UID ${uid}.`);
+        alert(`Berhasil menghapus ${deleted} entri absensi untuk UID ${uid}.`);
       } else {
-        alert("ℹ Tidak ada data absensi yang ditemukan untuk UID ini.");
+        alert("Tidak ada data absensi yang ditemukan untuk UID ini.");
       }
     } catch (err) {
       console.error("Gagal hapus absensi:", err);
-      alert("❌ Gagal menghapus absensi. Periksa console.");
+      alert("Gagal menghapus absensi. Periksa console.");
     }
   };
 
@@ -231,7 +231,7 @@ const AbsensiList = () => {
 
           <div className="list-table">
             {belumTerdaftar.length === 0 ? (
-              <div className="empty-state">Semua UID sudah terdaftar 🎉</div>
+              <div className="empty-state">Semua UID sudah terdaftar</div>
             ) : (
               belumTerdaftar.map((row) => (
                 <div key={row.id} className="list-row row-nowrap">
@@ -258,13 +258,13 @@ const AbsensiList = () => {
                       className="btn btn-gradient btn-sm"
                       onClick={() => setSelectedUID(row.uid)}
                     >
-                      ➕ Daftarkan
+                      Daftarkan
                     </button>
                     <button
                       className="btn btn-outline-danger btn-sm"
                       onClick={() => handleDeleteUID(row.uid, "belum")}
                     >
-                      🗑 Hapus UID
+                      Hapus UID
                     </button>
                   </div>
                 </div>
@@ -315,7 +315,7 @@ const AbsensiList = () => {
                         className="btn btn-outline-danger btn-sm"
                         onClick={() => handleDeleteUID(row.uid, "terdaftar")}
                       >
-                        🗑 Hapus UID
+                        Hapus UID
                       </button>
                     </div>
                   </div>
@@ -328,62 +328,85 @@ const AbsensiList = () => {
 
       {/* ================= Modal Daftar ================= */}
       {selectedUID && (
-        <div className="modal fade show d-block" tabIndex="-1" style={{ background: "rgba(2,6,23,0.65)" }}>
-          <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-            <div className="modal-content modal-glass">
-              <div className="modal-header modal-header-gradient">
-                <h5 className="modal-title">
-                  ✍ Daftarkan UID: <span className="mono">{selectedUID}</span>
-                </h5>
-                <button type="button" className="btn-close" onClick={() => setSelectedUID(null)}></button>
-              </div>
-              <form onSubmit={handleRegister}>
-                <div className="modal-body">
-                  <div className="mb-3">
-                    <label className="form-label fw-semibold">Nama</label>
-                    <input
-                      type="text"
-                      className="form-control pill"
-                      value={formData.nama}
-                      onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
-                      placeholder="Masukkan nama lengkap"
-                      required
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label fw-semibold">NIM</label>
-                    <input
-                      type="text"
-                      className="form-control pill mono"
-                      value={formData.nim}
-                      onChange={(e) => setFormData({ ...formData, nim: e.target.value })}
-                      placeholder="Contoh: 22.11.1234"
-                      required
-                    />
-                  </div>
-                  <div className="mb-2">
-                    <label className="form-label fw-semibold">Bidang</label>
-                    <input
-                      type="text"
-                      className="form-control pill"
-                      value={formData.bidang}
-                      onChange={(e) => setFormData({ ...formData, bidang: e.target.value })}
-                      placeholder="Contoh: Backend / Frontend / IoT"
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="modal-footer gap-2">
-                  <button type="submit" className="btn btn-gradient px-4">✅ Simpan</button>
-                  <button type="button" className="btn btn-ghost px-4" onClick={() => setSelectedUID(null)}>
-                    Batal
-                  </button>
-                </div>
-              </form>
+  <div
+    className="modal fade show d-block"
+    tabIndex="-1"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="modalRegisterTitle"
+    style={{ background: "rgba(2,6,23,0.65)" }}
+  >
+    <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div className="modal-content modern-modal flat-modal">
+        <div className="modal-header flat-modal-header">
+          <div className="modal-title-wrap">
+            <h5 id="modalRegisterTitle" className="modal-title modern-title">
+              Daftarkan UID
+            </h5>
+            <span className="modern-subtitle mono">{selectedUID}</span>
+          </div>
+          <button
+            type="button"
+            className="btn-close modern-close"
+            aria-label="Tutup"
+            onClick={() => setSelectedUID(null)}
+          />
+        </div>
+
+        <form onSubmit={handleRegister}>
+          <div className="modal-body modern-body">
+            <div className="mb-3">
+              <label className="form-label fw-semibold modern-label">Nama</label>
+              <input
+                type="text"
+                className="form-control modern-input flat-input"
+                value={formData.nama}
+                onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
+                placeholder="Masukkan nama lengkap"
+                required
+              />
+            </div>
+            <div className="mb-3">
+              <label className="form-label fw-semibold modern-label">NIM</label>
+              <input
+                type="text"
+                className="form-control mono modern-input flat-input"
+                value={formData.nim}
+                onChange={(e) => setFormData({ ...formData, nim: e.target.value })}
+                placeholder="Contoh: 1102210299"
+                required
+              />
+            </div>
+            <div className="mb-2">
+              <label className="form-label fw-semibold modern-label">Bidang</label>
+              <input
+                type="text"
+                className="form-control modern-input flat-input"
+                value={formData.bidang}
+                onChange={(e) => setFormData({ ...formData, bidang: e.target.value })}
+                placeholder="Contoh: hikmah politik"
+                required
+              />
             </div>
           </div>
-        </div>
-      )}
+
+          <div className="modal-footer flat-modal-footer gap-2">
+            <button type="submit" className="btn btn-gradient px-4">
+              Simpan
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost px-4"
+              onClick={() => setSelectedUID(null)}
+            >
+              Batal
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 };
