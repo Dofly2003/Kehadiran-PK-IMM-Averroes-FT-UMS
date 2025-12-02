@@ -121,14 +121,14 @@ const AbsensiLog = () => {
   }, []);
 
   // Download Excel khusus 1 hari
-  // Perubahan: file Excel hanya menyertakan nama, nim, bidang, waktu (tidak termasuk UID/rawPath)
+  // Perubahan: file Excel hanya menyertakan nama, prodi, bidang, waktu (tidak termasuk UID/rawPath)
   const downloadExcelPerHari = (tanggal) => {
     const rows = (data[tanggal] || []).map((row) => {
       const user = users[row.uid] || {};
       return {
         tanggal,
         nama: user.nama || "Belum Terdaftar",
-        nim: user.nim || "-",
+        prodi: user.prodi || user.nim || "-",
         bidang: user.bidang || "-",
         waktu: row.waktu || "-",
       };
@@ -217,8 +217,10 @@ const AbsensiLog = () => {
                               </div>
                             </div>
                             <div className="list-cell">
-                              <div className="list-label">NIM</div>
-                              <div className="list-value mono">{user.nim || "-"}</div>
+                              <div className="list-label">Prodi</div>
+                              <div className="list-value mono">
+                                {user.prodi || user.nim || "-"}
+                              </div>
                             </div>
                             <div className="list-cell">
                               <div className="list-label">Bidang</div>
@@ -235,6 +237,7 @@ const AbsensiLog = () => {
                               <div className="list-label">Status</div>
                               <div className="list-value">
                                 <span className="status-dot green" /> Hadir
+                                {row.flagged ? " (problematic)" : ""}
                               </div>
                             </div>
                           </div>

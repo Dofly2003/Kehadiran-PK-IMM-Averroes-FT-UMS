@@ -9,7 +9,7 @@ const AbsensiList = () => {
   const [data, setData] = useState([]);
   const [users, setUsers] = useState({ terdaftar: {}, belum_terdaftar: {} });
   const [selectedUID, setSelectedUID] = useState(null);
-  const [formData, setFormData] = useState({ nama: "", nim: "", bidang: "" });
+  const [formData, setFormData] = useState({ nama: "", prodi: "", bidang: "" });
 
   // ================= Ambil Data Absensi =================
   useEffect(() => {
@@ -87,7 +87,7 @@ const AbsensiList = () => {
     if (users.terdaftar[selectedUID]?.nama) {
       alert("UID ini sudah terdaftar!");
       setSelectedUID(null);
-      setFormData({ nama: "", nim: "", bidang: "" });
+      setFormData({ nama: "", prodi: "", bidang: "" });
       return;
     }
 
@@ -97,7 +97,7 @@ const AbsensiList = () => {
 
       await set(ref(db, "users/terdaftar/" + selectedUID), {
         nama: formData.nama,
-        nim: formData.nim,
+        prodi: formData.prodi,
         bidang: formData.bidang,
         waktu: waktuString,
       });
@@ -106,7 +106,7 @@ const AbsensiList = () => {
 
       alert("User berhasil didaftarkan!");
       setSelectedUID(null);
-      setFormData({ nama: "", nim: "", bidang: "" });
+      setFormData({ nama: "", prodi: "", bidang: "" });
     } catch (err) {
       console.error("Gagal daftar:", err);
       alert("Gagal mendaftarkan user. Periksa console.");
@@ -194,7 +194,8 @@ const AbsensiList = () => {
         id: uid,
         uid,
         nama: user.nama,
-        nim: user.nim,
+        // fallback agar data lama (nim) tetap tampil sebagai prodi
+        prodi: user.prodi || user.nim || "-",
         bidang: user.bidang,
         waktu: latestAbsen ? latestAbsen.waktu : user.waktu || "-",
       };
@@ -293,8 +294,8 @@ const AbsensiList = () => {
                       <div className="list-value fw-semibold">{row.nama}</div>
                     </div>
                     <div className="list-cell">
-                      <div className="list-label">NIM</div>
-                      <div className="list-value mono">{row.nim}</div>
+                      <div className="list-label">Prodi</div>
+                      <div className="list-value mono">{row.prodi}</div>
                     </div>
                     <div className="list-cell">
                       <div className="list-label">Bidang</div>
@@ -367,13 +368,13 @@ const AbsensiList = () => {
               />
             </div>
             <div className="mb-3">
-              <label className="form-label fw-semibold modern-label">NIM</label>
+              <label className="form-label fw-semibold modern-label">Prodi</label>
               <input
                 type="text"
                 className="form-control mono modern-input flat-input"
-                value={formData.nim}
-                onChange={(e) => setFormData({ ...formData, nim: e.target.value })}
-                placeholder="Contoh: 1102210299"
+                value={formData.prodi}
+                onChange={(e) => setFormData({ ...formData, prodi: e.target.value })}
+                placeholder="Contoh: Teknik Informatika"
                 required
               />
             </div>

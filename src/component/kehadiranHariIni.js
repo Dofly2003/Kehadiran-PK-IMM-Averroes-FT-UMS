@@ -44,11 +44,16 @@ const AbsensiHariIni = () => {
 
   const hadirUIDs = Object.keys(absensiHariIni);
 
-  let sudahHadir = hadirUIDs.map((uid) => ({
-    uid,
-    ...(users[uid] || {}),
-    waktu: absensiHariIni[uid]?.waktu || "-",
-  }));
+  let sudahHadir = hadirUIDs.map((uid) => {
+    const user = users[uid] || {};
+    return {
+      uid,
+      nama: user.nama || "-",
+      prodi: user.prodi || user.nim || "-",
+      bidang: user.bidang || "-",
+      waktu: absensiHariIni[uid]?.waktu || "-",
+    };
+  });
 
   // Sort by waktu terbaru (fallback jika waktu tidak valid)
   sudahHadir.sort((a, b) => {
@@ -59,7 +64,12 @@ const AbsensiHariIni = () => {
 
   const belumHadir = Object.entries(users)
     .filter(([uid]) => !hadirUIDs.includes(uid))
-    .map(([uid, user]) => ({ uid, ...user }));
+    .map(([uid, user]) => ({
+      uid,
+      nama: user.nama || "-",
+      prodi: user.prodi || user.nim || "-",
+      bidang: user.bidang || "-",
+    }));
 
   // Ringkasan
   const totalSudah = sudahHadir.length;
@@ -90,7 +100,7 @@ const AbsensiHariIni = () => {
       sudahHadir.map((row) => ({
         UID: row.uid,
         Nama: row.nama || "-",
-        NIM: row.nim || "-",
+        Prodi: row.prodi || "-",
         Bidang: row.bidang || "-",
         Waktu: row.waktu || "-",
       }))
@@ -101,7 +111,7 @@ const AbsensiHariIni = () => {
       belumHadir.map((row) => ({
         UID: row.uid,
         Nama: row.nama || "-",
-        NIM: row.nim || "-",
+        Prodi: row.prodi || "-",
         Bidang: row.bidang || "-",
       }))
     );
@@ -168,8 +178,8 @@ const AbsensiHariIni = () => {
                       <div className="list-value fw-semibold">{row.nama || "-"}</div>
                     </div>
                     <div className="list-cell">
-                      <div className="list-label">NIM</div>
-                      <div className="list-value mono">{row.nim || "-"}</div>
+                      <div className="list-label">Prodi</div>
+                      <div className="list-value mono">{row.prodi || "-"}</div>
                     </div>
                     <div className="list-cell">
                       <div className="list-label">Waktu</div>
@@ -199,8 +209,8 @@ const AbsensiHariIni = () => {
                       <div className="list-value fw-semibold">{row.nama || "-"}</div>
                     </div>
                     <div className="list-cell">
-                      <div className="list-label">NIM</div>
-                      <div className="list-value mono">{row.nim || "-"}</div>
+                      <div className="list-label">Prodi</div>
+                      <div className="list-value mono">{row.prodi || "-"}</div>
                     </div>
                   </div>
                 ))
