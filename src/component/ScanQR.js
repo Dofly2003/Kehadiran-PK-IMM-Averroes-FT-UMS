@@ -13,18 +13,22 @@ const ScanQR = () => {
   const [messageType, setMessageType] = useState("info");
   const [cameraError, setCameraError] = useState(false);
   const isInitialized = useRef(false);
-  const processingRef = useRef(false); // ✅ Prevent double scan
+  const processingRef = useRef(false);
+
+  // ✅ Manual input mode
+  const [manualMode, setManualMode] = useState(false);
+  const [manualInput, setManualInput] = useState("");
 
   useEffect(() => {
-    if (isInitialized.current) return;
+    if (isInitialized.current || manualMode) return;
     isInitialized.current = true;
 
     startScanner();
-    
+
     return () => {
       stopScanner();
     };
-  }, []);
+  }, [manualMode]);
 
   const startScanner = async () => {
     try {
@@ -42,7 +46,6 @@ const ScanQR = () => {
           fps: 10,
           qrbox: { width: 250, height: 250 },
           aspectRatio: 1.0,
-          // ✅ Disable flip untuk performa lebih baik
           disableFlip: false
         },
         onScanSuccess,
@@ -52,10 +55,10 @@ const ScanQR = () => {
       setScanning(true);
       setMessage("📷 Arahkan kamera ke QR Code");
       setMessageType("info");
-      processingRef.current = false; // ✅ Reset processing flag
-      
+      processingRef.current = false;
+
       console.log("✅ Scanner started successfully");
-      
+
     } catch (error) {
       console.error("❌ Camera error:", error);
       setCameraError(true);
@@ -68,7 +71,7 @@ const ScanQR = () => {
     if (scannerRef.current) {
       try {
         const state = scannerRef.current.getState();
-        if (state === 2) { // SCANNING state
+        if (state === 2) {
           await scannerRef.current.stop();
         }
         await scannerRef.current.clear();
@@ -81,114 +84,90 @@ const ScanQR = () => {
     }
   };
 
-  const onScanSuccess = async (decodedText) => {
-    // ✅ Prevent double processing
-    if (processingRef. current) {
-      console.log("⚠️ Already processing, ignoring scan");
-      return;
-    }
-
-    console.log("📷 QR Scanned:", decodedText);
-    
-    if (! scanning) {
-      console.log("⚠️ Not in scanning mode");
-      return;
-    }
-
-    processingRef.current = true; // ✅ Lock processing
-    
+  const processQRData = async (decodedText) => {
     try {
-      // ✅ Parse QR code
+      console.log("🔍 Processing QR:", decodedText);
+
+      // Parse QR code
       let qrData;
       try {
         qrData = JSON.parse(decodedText);
-        console.log("✅ Parsed QR data:", qrData);
+        console.log("✅ Parsed:", qrData);
       } catch (parseError) {
         console.error("❌ Parse error:", parseError);
         setMessage("⚠️ QR Code tidak valid!  Format salah.");
         setMessageType("warning");
-        
-        setTimeout(() => {
-          resetScanner();
-        }, 2000);
-        return;
+        return false;
       }
 
-      // ✅ Validasi struktur QR
-      if (! qrData.sessionId || !qrData.expiredAt) {
-        console.error("❌ QR incomplete:", qrData);
-        setMessage("⚠️ QR Code tidak lengkap! Minta QR baru dari admin.");
+      // Validasi struktur
+      if (!qrData.sessionId || !qrData.expiredAt) {
+        console.error("❌ Incomplete:", qrData);
+        setMessage("⚠️ QR Code tidak lengkap!");
         setMessageType("warning");
-        
-        setTimeout(() => {
-          resetScanner();
-        }, 3000);
-        return;
+        return false;
       }
 
       const { sessionId } = qrData;
 
-      // Stop scanner sebelum validasi
-      await stopScanner();
-      setScanning(false);
       setMessage("⏳ Memvalidasi QR Code...");
       setMessageType("info");
 
-      // ✅ Validasi session
-      console.log("🔍 Validating session:", sessionId);
+      // Validasi session
+      console.log("🔍 Validating:", sessionId);
       const validation = await validateQRSession(sessionId);
-      console.log("📊 Validation result:", validation);
+      console.log("📊 Result:", validation);
 
-      // ✅ QR EXPIRED
       if (validation.expired) {
-        console.log("⚠️ QR expired");
         setMessage(`⚠️ ${validation.message}`);
         setMessageType("warning");
-        
-        setTimeout(() => {
-          resetScanner();
-        }, 4000);
-        return;
+        return false;
       }
 
-      // ✅ ERROR SISTEM
       if (validation.isSystemError) {
-        console.log("❌ System error");
         setMessage(`❌ ${validation.message}`);
         setMessageType("error");
-        
-        setTimeout(() => {
-          resetScanner();
-        }, 4000);
-        return;
+        return false;
       }
 
-      // ✅ QR VALID
       if (validation.valid) {
-        console.log("✅ QR valid, navigating to form");
-        setMessage("✅ QR Valid! Mengarahkan ke form absensi.. .");
+        console.log("✅ QR VALID!");
+        console.log("📍 Target URL:  /absensi? session=" + sessionId);
+
+        setMessage("✅ QR Valid! Mengarahkan ke form absensi...");
         setMessageType("success");
-        
+
         setTimeout(() => {
-          navigate(`/absensi? session=${sessionId}`);
+          const targetPath = `/absensi?session=${sessionId}`;
+          console.log("🚀 Navigating to:", targetPath);
+          navigate(targetPath);
         }, 1000);
-        return;
+
+        return true;
       }
 
-      // ✅ QR TIDAK VALID (lainnya)
-      console.log("⚠️ QR invalid:", validation.message);
       setMessage(`⚠️ ${validation.message}`);
       setMessageType("warning");
-      
-      setTimeout(() => {
-        resetScanner();
-      }, 3000);
-      
+      return false;
+
     } catch (error) {
-      console.error("❌ Scan processing error:", error);
-      setMessage("❌ Terjadi kesalahan:  " + error.message);
+      console.error("❌ Processing error:", error);
+      setMessage("❌ Error:  " + error.message);
       setMessageType("error");
-      
+      return false;
+    }
+  };
+
+  const onScanSuccess = async (decodedText) => {
+    if (processingRef.current || !scanning) return;
+
+    processingRef.current = true;
+    await stopScanner();
+    setScanning(false);
+
+    const success = await processQRData(decodedText);
+
+    if (!success) {
       setTimeout(() => {
         resetScanner();
       }, 3000);
@@ -196,7 +175,6 @@ const ScanQR = () => {
   };
 
   const resetScanner = () => {
-    console.log("🔄 Resetting scanner.. .");
     processingRef.current = false;
     isInitialized.current = false;
     setMessage("📷 Arahkan kamera ke QR Code");
@@ -205,8 +183,30 @@ const ScanQR = () => {
   };
 
   const onScanError = (errorMessage) => {
-    // ✅ Ignore scan errors (normal saat kamera mencari QR)
-    // Jangan log untuk avoid console spam
+    // Ignore
+  };
+
+  // ✅ Manual submit handler
+  const handleManualSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!manualInput.trim()) {
+      setMessage("⚠️ Masukkan QR string terlebih dahulu!");
+      setMessageType("warning");
+      return;
+    }
+
+    await processQRData(manualInput);
+  };
+
+  // ✅ Toggle manual mode
+  const toggleManualMode = async () => {
+    if (!manualMode) {
+      await stopScanner();
+      setScanning(false);
+    }
+    setManualMode(!manualMode);
+    setMessage("");
   };
 
   return (
@@ -214,46 +214,84 @@ const ScanQR = () => {
       <div className="scan-container">
         <div className="scan-header">
           <h1 className="scan-title">📱 Scan QR Absensi</h1>
-          <p className="scan-subtitle">Arahkan kamera ke QR Code dari admin</p>
+          <p className="scan-subtitle">
+            {manualMode ? "Mode Manual Input" : "Arahkan kamera ke QR Code"}
+          </p>
         </div>
 
-        <div className="qr-reader-wrapper">
-          <div id="qr-reader"></div>
-        </div>
+        {/* ✅ Toggle Manual Mode */}
+        <button
+          className="btn btn-secondary"
+          onClick={toggleManualMode}
+          style={{ marginBottom: "16px", width: "100%" }}
+        >
+          {manualMode ? "🔄 Kembali ke Scanner" : "⌨️ Input Manual (Debug)"}
+        </button>
 
-        {/* ✅ Status Message */}
+        {/* ✅ Manual Input Mode */}
+        {manualMode ? (
+          <form onSubmit={handleManualSubmit}>
+            <div className="form-group">
+              <label className="form-label">Paste QR String:</label>
+              <textarea
+                className="form-control flat-input"
+                rows="5"
+                value={manualInput}
+                onChange={(e) => setManualInput(e.target.value)}
+                placeholder='{"sessionId":"qr_... ","expiredAt": 1234567890}'
+                style={{
+                  fontFamily: "monospace",
+                  fontSize: "12px"
+                }}
+              />
+            </div>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              style={{ width: "100%" }}
+            >
+              ✅ Validasi QR String
+            </button>
+          </form>
+        ) : (
+          // Scanner Mode
+          <>
+            {!cameraError && (
+              <div className="qr-reader-wrapper">
+                <div id="qr-reader"></div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Status Message */}
         {message && (
           <div className={`scan-message ${messageType}`}>
             {message}
           </div>
         )}
 
-        {/* ✅ Camera Error Help */}
-        {cameraError && (
+        {/* Camera Error Help */}
+        {cameraError && !manualMode && (
           <div className="error-help">
             <p><strong>⚠️ Troubleshooting:</strong></p>
             <ul>
               <li>Pastikan browser memiliki izin kamera</li>
               <li>Gunakan HTTPS (bukan HTTP)</li>
               <li>Coba refresh halaman</li>
-              <li>Coba browser lain (Chrome/Firefox)</li>
+              <li>Atau gunakan <strong>Mode Manual</strong> di atas</li>
             </ul>
-            <button 
-              className="btn btn-primary" 
-              onClick={() => window.location.reload()}
-              style={{marginTop: "12px"}}
-            >
-              🔄 Refresh Halaman
-            </button>
           </div>
         )}
 
-        {/* ✅ Back Button */}
-        {! cameraError && (
-          <button className="btn-back" onClick={() => navigate("/")}>
-            ← Kembali
-          </button>
-        )}
+        {/* Back Button */}
+        <button
+          className="btn-back"
+          onClick={() => navigate("/")}
+          style={{ marginTop: "16px" }}
+        >
+          ← Kembali
+        </button>
       </div>
     </div>
   );
