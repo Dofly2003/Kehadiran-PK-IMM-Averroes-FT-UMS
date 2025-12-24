@@ -1,4 +1,4 @@
-// src/utils/qrHelper. js
+// src/utils/qrHelper.js
 import { ref, set, get, remove } from "firebase/database";
 import { db } from "../firebase";
 
@@ -17,7 +17,7 @@ export function generateSessionId() {
  */
 export async function createQRSession(durationMinutes = 5) {
   const sessionId = generateSessionId();
-  const now = Date. now();
+  const now = Date.now();
   const expiredAt = now + (durationMinutes * 60 * 1000);
   
   const sessionRef = ref(db, `qr_session/${sessionId}`);
@@ -30,18 +30,18 @@ export async function createQRSession(durationMinutes = 5) {
   
   return {
     sessionId,
-    expiredAt
+    expiredAt,
+    createdAt: now
   };
 }
 
 /**
  * Validasi QR session
  * @param {string} sessionId - ID session dari QR code
- * @returns {object} { valid: boolean, message: string, expired: boolean, isSystemError: boolean }
+ * @returns {object} { valid:  boolean, message:  string, expired: boolean, isSystemError: boolean }
  */
 export async function validateQRSession(sessionId) {
   try {
-    // ✅ Cek apakah sessionId ada
     if (!sessionId) {
       return { 
         valid: false, 
@@ -54,21 +54,19 @@ export async function validateQRSession(sessionId) {
     const sessionRef = ref(db, `qr_session/${sessionId}`);
     const snapshot = await get(sessionRef);
     
-    // ✅ Session tidak ditemukan
     if (!snapshot.exists()) {
       return { 
         valid: false, 
         expired: false,
         isSystemError: false,
-        message: "QR Code tidak ditemukan atau sudah dihapus" 
+        message:  "QR Code tidak ditemukan atau sudah dihapus" 
       };
     }
     
     const session = snapshot.val();
     const now = Date.now();
     
-    // ✅ Session tidak aktif
-    if (!session. aktif) {
+    if (! session.aktif) {
       return { 
         valid: false, 
         expired: false,
@@ -77,31 +75,26 @@ export async function validateQRSession(sessionId) {
       };
     }
     
-    // ✅ QR EXPIRED - Ini BUKAN error, tapi kondisi normal
     if (now > session.expiredAt) {
-      // Auto-deactivate expired session
       try {
-        await set(sessionRef, { ... session, aktif: false });
+        await set(sessionRef, {... session, aktif: false});
       } catch (updateError) {
         console.warn("Failed to deactivate expired session:", updateError);
       }
       
-      // Hitung berapa lama sudah expired
-      const expiredDuration = Math.floor((now - session.expiredAt) / 60000); // dalam menit
+      const expiredDuration = Math.floor((now - session.expiredAt) / 60000);
       
       return { 
         valid: false, 
-        expired: true, // ✅ Flag khusus untuk expired
+        expired: true,
         isSystemError: false,
-        message:  `QR Code sudah kadaluarsa ${expiredDuration} menit yang lalu.  Minta QR baru dari admin.`,
+        message: `QR Code sudah kadaluarsa ${expiredDuration} menit yang lalu.  Minta QR baru dari admin.`,
         expiredAt: session.expiredAt,
-        expiredDuration: expiredDuration
+        expiredDuration:  expiredDuration
       };
     }
     
-    // ✅ QR VALID
-    // Hitung sisa waktu
-    const remainingTime = Math.floor((session.expiredAt - now) / 60000); // dalam menit
+    const remainingTime = Math.floor((session.expiredAt - now) / 60000);
     
     return { 
       valid: true, 
@@ -115,11 +108,10 @@ export async function validateQRSession(sessionId) {
   } catch (error) {
     console.error("Error validating QR session:", error);
     
-    // ✅ Error sistem (Firebase down, network error, dll)
     return {
       valid: false,
       expired: false,
-      isSystemError: true, // ✅ Flag untuk error sistem
+      isSystemError: true,
       message: "Tidak dapat terhubung ke server.  Periksa koneksi internet Anda.",
       error: error. message
     };
@@ -136,11 +128,11 @@ export async function deactivateSession(sessionId) {
     const snapshot = await get(sessionRef);
     
     if (snapshot.exists()) {
-      await set(sessionRef, { ... snapshot.val(), aktif: false });
-      return { success: true, message: "Session berhasil dinonaktifkan" };
+      await set(sessionRef, {... snapshot.val(), aktif: false});
+      return {success: true, message: "Session berhasil dinonaktifkan"};
     }
     
-    return { success: false, message: "Session tidak ditemukan" };
+    return {success: false, message:  "Session tidak ditemukan"};
     
   } catch (error) {
     console.error("Error deactivating session:", error);
@@ -153,15 +145,14 @@ export async function deactivateSession(sessionId) {
 }
 
 /**
- * Clean expired sessions (cleanup utility)
- * Sebaiknya dipanggil secara periodik atau saat admin generate QR baru
+ * Clean expired sessions
  */
 export async function cleanExpiredSessions() {
   try {
     const sessionsRef = ref(db, "qr_session");
     const snapshot = await get(sessionsRef);
     
-    if (!snapshot. exists()) {
+    if (! snapshot.exists()) {
       return { 
         success: true, 
         message: "Tidak ada session untuk dibersihkan",
@@ -173,9 +164,8 @@ export async function cleanExpiredSessions() {
     const now = Date.now();
     let cleanedCount = 0;
     
-    // Hapus session yang sudah expired
-    for (const [sessionId, session] of Object.entries(sessions)) {
-      if (now > session. expiredAt) {
+    for (const [sessionId, session] of Object. entries(sessions)) {
+      if (now > session.expiredAt) {
         const sessionRef = ref(db, `qr_session/${sessionId}`);
         await remove(sessionRef);
         cleanedCount++;
@@ -184,7 +174,7 @@ export async function cleanExpiredSessions() {
     
     return {
       success: true,
-      message: `Berhasil membersihkan ${cleanedCount} session yang expired`,
+      message:  `Berhasil membersihkan ${cleanedCount} session yang expired`,
       cleaned: cleanedCount
     };
     
@@ -199,8 +189,7 @@ export async function cleanExpiredSessions() {
 }
 
 /**
- * Get session info (untuk debugging atau monitoring)
- * @param {string} sessionId - ID session
+ * Get session info
  */
 export async function getSessionInfo(sessionId) {
   try {
@@ -240,7 +229,7 @@ export async function getSessionInfo(sessionId) {
 }
 
 /**
- * Get all active sessions (untuk admin monitoring)
+ * Get all active sessions
  */
 export async function getAllActiveSessions() {
   try {

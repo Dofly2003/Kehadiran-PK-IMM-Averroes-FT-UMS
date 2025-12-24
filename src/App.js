@@ -10,6 +10,7 @@ import AbsensiScan from "./component/AbsensiScan";
 import AdminQR from "./component/AdminQR";
 import ScanQR from "./component/ScanQR";
 import AbsensiForm from "./component/AbsensiForm";
+import SetupAuthenticator from './component/SetupAuthenticator'; // ✅ Temporary
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
         <Route path="/barcode" element={<AdminQR />} />        
         <Route path="/scan" element={<ScanQR />} />
         <Route path="/absensi" element={<AbsensiForm />} />
+        <Route path="/setup-authenticator" element={<SetupAuthenticator />} />
       </Routes>
     </Router>
   );

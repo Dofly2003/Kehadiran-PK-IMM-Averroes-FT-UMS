@@ -1,130 +1,232 @@
-// src/components/AdminQR. js
+// src/components/AdminQR.js
 import React, { useState, useEffect } from "react";
-import QRCode from "qrcode";
 import { createQRSession } from "../utils/qrHelper";
+import { verifyTOTP } from "../utils/setupAdmin";
+import QRCode from "qrcode";
 import "./AdminQR.css";
 
 const AdminQR = () => {
-  const [qrData, setQrData] = useState(null);
-  const [qrImage, setQrImage] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(0);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [totpCode, setTotpCode] = useState("");
+  const [authError, setAuthError] = useState("");
+  const [qrCodeUrl, setQrCodeUrl] = useState("");
+  const [sessionData, setSessionData] = useState(null);
+  const [countdown, setCountdown] = useState(30);
 
-  // Auto-generate QR setiap 5 menit
+  const TOTP_SECRET = process.env.REACT_APP_TOTP_SECRET;
+
+  // Debug:  Log secret saat component mount
   useEffect(() => {
-    generateQR();
-    
-    const interval = setInterval(() => {
-      generateQR();
-    }, 5 * 60 * 1000); // 5 menit
+    console.log("TOTP_SECRET dari . env:", TOTP_SECRET);
+    console.log("TOTP_SECRET ada? ", !!TOTP_SECRET);
+  }, [TOTP_SECRET]);
 
-    return () => clearInterval(interval);
+  // Check session
+  useEffect(() => {
+    const authTime = localStorage.getItem("admin_auth_time");
+    if (authTime) {
+      const elapsed = Date.now() - parseInt(authTime);
+      if (elapsed < 60 * 60 * 1000) {
+        setIsAuthenticated(true);
+      } else {
+        localStorage.removeItem("admin_auth_time");
+      }
+    }
   }, []);
 
   // Countdown timer
   useEffect(() => {
-    if (! qrData) return;
+    if (isAuthenticated) {
+      const interval = setInterval(() => {
+        const seconds = 30 - (Math.floor(Date.now() / 1000) % 30);
+        setCountdown(seconds);
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [isAuthenticated]);
 
-    const interval = setInterval(() => {
-      const now = Date.now();
-      const remaining = Math.floor((qrData.expiredAt - now) / 1000);
-      
-      if (remaining <= 0) {
-        setTimeLeft(0);
-        generateQR(); // Auto-refresh when expired
-      } else {
-        setTimeLeft(remaining);
-      }
-    }, 1000);
+  const handleTOTPSubmit = (e) => {
+    e.preventDefault();
+    setAuthError("");
 
-    return () => clearInterval(interval);
-  }, [qrData]);
+    console.log("=== DEBUG TOTP ===");
+    console.log("Input code:", totpCode);
+    console.log("Secret:", TOTP_SECRET);
 
-  const generateQR = async () => {
-    setLoading(true);
-    
-    try {
-      // Create session di Firebase
-      const session = await createQRSession(5); // 5 menit
-      
-      // Buat QR Code berisi sessionId
-      const qrContent = JSON.stringify({
-        sessionId: session.sessionId,
-        expiredAt: session.expiredAt
-      });
-      
-      // Generate QR image
-      const qrImageUrl = await QRCode.toDataURL(qrContent, {
-        width: 400,
-        margin: 2,
-        color: {
-          dark: "#1a202c",
-          light: "#ffffff"
-        }
-      });
-      
-      setQrData(session);
-      setQrImage(qrImageUrl);
-      
-    } catch (error) {
-      console.error("Error generating QR:", error);
-      alert("Gagal membuat QR Code");
-    } finally {
-      setLoading(false);
+    if (! TOTP_SECRET) {
+      setAuthError("TOTP secret belum di-setup!  Jalankan /setup-authenticator dulu.");
+      return;
+    }
+
+    const isValid = verifyTOTP(totpCode, TOTP_SECRET);
+    console.log("Verification result:", isValid);
+
+    if (isValid) {
+      console.log("✅ Kode valid!");
+      setIsAuthenticated(true);
+      localStorage.setItem("admin_auth_time", Date.now().toString());
+      setAuthError("");
+      setTotpCode("");
+    } else {
+      console.log("❌ Kode salah!");
+      setAuthError("Kode salah!  Pastikan kode dari Authenticator App.");
+      setTotpCode("");
     }
   };
 
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${String(secs).padStart(2, "0")}`;
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    localStorage.removeItem("admin_auth_time");
+    setQrCodeUrl("");
+    setSessionData(null);
   };
+
+  const generateQR = async () => {
+    try {
+      const duration = 5;
+      const session = await createQRSession(duration);
+      
+      const qrPayload = {
+        sessionId:  session.sessionId,
+        expiredAt: session.expiredAt
+      };
+
+      const qrString = JSON.stringify(qrPayload);
+      const qrImage = await QRCode.toDataURL(qrString, {
+        width: 400,
+        margin: 2
+      });
+
+      setQrCodeUrl(qrImage);
+      setSessionData(session);
+    } catch (error) {
+      console.error("Error generating QR:", error);
+      alert("Gagal generate QR Code");
+    }
+  };
+
+  if (! isAuthenticated) {
+    return (
+      <div className="admin-page">
+        <div className="admin-container" style={{maxWidth: "450px"}}>
+          <div className="admin-header">
+            <h1 className="admin-title">🔐 Admin Verification</h1>
+            <p className="admin-subtitle">
+              Masukkan kode 6 digit dari Authenticator App
+            </p>
+          </div>
+
+          <form onSubmit={handleTOTPSubmit}>
+            <div className="form-group">
+              <label className="form-label">
+                🔢 Kode Authenticator (6 digit)
+              </label>
+              <input
+                type="text"
+                className="form-control flat-input"
+                placeholder="000000"
+                value={totpCode}
+                onChange={(e) => setTotpCode(e.target.value. replace(/\D/g, "").slice(0, 6))}
+                maxLength={6}
+                pattern="[0-9]{6}"
+                autoFocus
+                style={{
+                  fontSize: "24px",
+                  textAlign: "center",
+                  letterSpacing: "8px",
+                  fontFamily: "monospace"
+                }}
+              />
+              <small style={{color: "#a0aec0", display: "block", marginTop: "8px"}}>
+                Buka <strong>Google Authenticator</strong> atau <strong>Microsoft Authenticator</strong>
+              </small>
+            </div>
+
+            {authError && (
+              <div className="alert alert-danger">
+                ❌ {authError}
+              </div>
+            )}
+
+            {/* Debug info */}
+            <div style={{
+              background: "#f7fafc",
+              padding: "12px",
+              borderRadius: "8px",
+              marginBottom: "16px",
+              fontSize: "12px",
+              fontFamily: "monospace"
+            }}>
+              <div>Secret loaded: {TOTP_SECRET ?  "✅ Yes" : "❌ No"}</div>
+              <div>Secret: {TOTP_SECRET ?  TOTP_SECRET. substring(0, 8) + "..." : "Not found"}</div>
+            </div>
+
+            <button 
+              type="submit" 
+              className="btn btn-gradient"
+              disabled={totpCode.length !== 6}
+            >
+              🔓 Verifikasi & Masuk
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-page">
       <div className="admin-container">
         <div className="admin-header">
-          <h1 className="admin-title">🔐 Admin - QR Absensi</h1>
-          <p className="admin-subtitle">Tampilkan QR Code untuk mahasiswa scan</p>
+          <h1 className="admin-title">⚙️ Admin QR Code</h1>
+          <p className="admin-subtitle">
+            ✅ Terverifikasi | Kode baru dalam:  <strong>{countdown}s</strong>
+          </p>
+          <button 
+            onClick={handleLogout}
+            className="btn btn-sm btn-outline-danger"
+            style={{marginTop: "10px"}}
+          >
+            🚪 Logout
+          </button>
         </div>
 
-        {loading && (
-          <div className="loading-state">
-            <div className="spinner"></div>
-            <p>Membuat QR Code...</p>
-          </div>
-        )}
+        <button className="btn-refresh" onClick={generateQR}>
+          🔄 Generate QR Code Baru
+        </button>
 
-        {!loading && qrImage && (
+        {qrCodeUrl && (
           <div className="qr-display">
             <div className="qr-wrapper">
-              <img src={qrImage} alt="QR Code Absensi" className="qr-image" />
+              <img src={qrCodeUrl} alt="QR Code" className="qr-image" />
             </div>
 
-            <div className="qr-info">
-              <div className="info-row">
-                <span className="info-label">Session ID:</span>
-                <span className="info-value mono">{qrData. sessionId}</span>
+            {sessionData && (
+              <div className="qr-info">
+                <div className="info-row">
+                  <span className="info-label">Status:</span>
+                  <span className="status-badge active">🟢 Aktif</span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Dibuat:</span>
+                  <span className="info-value">
+                    {new Date(sessionData.createdAt).toLocaleString("id-ID")}
+                  </span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Berlaku sampai:</span>
+                  <span className="info-value">
+                    {new Date(sessionData.expiredAt).toLocaleString("id-ID")}
+                  </span>
+                </div>
               </div>
-              <div className="info-row">
-                <span className="info-label">Status:</span>
-                <span className="status-badge active">● Aktif</span>
-              </div>
-              <div className="info-row">
-                <span className="info-label">Berlaku selama:</span>
-                <span className="timer">{formatTime(timeLeft)}</span>
-              </div>
-            </div>
-
-            <button className="btn-refresh" onClick={generateQR}>
-              🔄 Generate QR Baru
-            </button>
+            )}
           </div>
         )}
 
-        <div className="admin-footer">
-          <p>✨ QR Code akan auto-refresh setiap 5 menit</p>
-        </div>
+        <p className="admin-footer">
+          🔒 Protected dengan 2FA Authenticator
+        </p>
       </div>
     </div>
   );
