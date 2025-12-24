@@ -23,31 +23,31 @@ const AbsensiForm = () => {
   const [validating, setValidating] = useState(true);
   const [sessionInfo, setSessionInfo] = useState(null);
 
-  // Validasi session saat mount
+  // ✅ SKIP VALIDATION MODE (untuk debugging)
+  const SKIP_VALIDATION = true; // ⚠️ Set ke false setelah fix
+
   useEffect(() => {
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     console.log("📋 AbsensiForm Loaded");
-    console.log("🔍 Full URL:", window.location.href);
-    console.log("🔍 Session ID from URL:", sessionId);
+    console.log("🔍 Session ID:", sessionId);
+    console.log("⚠️ SKIP_VALIDATION:", SKIP_VALIDATION);
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     
     validateSession();
   }, [sessionId]);
 
-  // Fetch users setelah session valid
   useEffect(() => {
-    if (! sessionValid) {
+    if (!sessionValid) {
       console.log("⚠️ Session not valid, skipping user fetch");
       return;
     }
 
-    console.log("✅ Session valid, loading users...");
-
+    console.log("✅ Loading users...");
     const usersRef = ref(db, "users/terdaftar");
     
     const unsubscribe = onValue(usersRef, (snapshot) => {
       const val = snapshot.val();
-      console.log("📊 Users loaded:", Object.keys(val || {}).length, "users");
+      console.log("📊 Users loaded:", Object.keys(val || {}).length);
       setUsers(val || {});
       setLoading(false);
     }, (error) => {
@@ -60,94 +60,84 @@ const AbsensiForm = () => {
   }, [sessionValid]);
 
   const validateSession = async () => {
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    console.log("🔍 Starting session validation...");
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("🔍 Validating session...");
     
     if (!sessionId) {
-      console.error("❌ No session ID in URL");
-      showAlert("danger", "Session tidak valid.  Scan QR Code terlebih dahulu.");
+      console.error("❌ No session ID");
+      showAlert("danger", "Session tidak valid");
       setValidating(false);
       
-      setTimeout(() => {
-        navigate("/scan");
-      }, 2000);
+      setTimeout(() => navigate("/scan"), 2000);
       return;
     }
 
     try {
+      // ✅ SKIP VALIDATION untuk debugging
+      if (SKIP_VALIDATION) {
+        console.warn("⚠️⚠️⚠️ SKIPPING VALIDATION (DEBUG MODE) ⚠️⚠️⚠️");
+        console.log("Session ID accepted without validation:", sessionId);
+        
+        setSessionValid(true);
+        setSessionInfo({
+          valid: true,
+          remainingTime: 30,
+          message: "DEBUG:  Validation bypassed"
+        });
+        setValidating(false);
+        return;
+      }
+
+      // Normal validation
       console.log("🔍 Calling validateQRSession()...");
-      console.log("Session ID:", sessionId);
-      
-      // ✅ Call validation function
       const validation = await validateQRSession(sessionId);
       
-      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-      console.log("📊 Validation Result:");
-      console.log(JSON.stringify(validation, null, 2));
-      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+      console.log("📊 Validation result:", validation);
 
-      // ✅ Handle system error
       if (validation.isSystemError) {
-        console.error("❌ System error:", validation.message);
+        console.error("❌ System error");
         showAlert("danger", validation.message);
         setValidating(false);
         return;
       }
 
-      // ✅ Handle expired session
       if (validation.expired) {
-        console.warn("⚠️ Session expired:", validation.message);
+        console.warn("⚠️ Expired");
         showAlert("warning", validation.message);
         setValidating(false);
-        
-        setTimeout(() => {
-          navigate("/scan");
-        }, 3000);
+        setTimeout(() => navigate("/scan"), 3000);
         return;
       }
 
-      // ✅ Handle invalid session
       if (! validation.valid) {
-        console.error("❌ Session invalid:", validation.message);
+        console.error("❌ Invalid");
         showAlert("danger", validation.message);
         setValidating(false);
-        
-        setTimeout(() => {
-          navigate("/scan");
-        }, 2000);
+        setTimeout(() => navigate("/scan"), 2000);
         return;
       }
 
-      // ✅ Session valid! 
-      console.log("✅ Session valid!");
-      console.log("Remaining time:", validation.remainingTime, "minutes");
-      
+      console.log("✅ Valid!");
       setSessionValid(true);
       setSessionInfo(validation);
       setValidating(false);
 
     } catch (error) {
       console.error("❌ Validation error:", error);
-      console.error("Error stack:", error.stack);
-      showAlert("danger", "Gagal memvalidasi session:  " + error.message);
+      showAlert("danger", "Error:  " + error.message);
       setValidating(false);
-      
-      setTimeout(() => {
-        navigate("/scan");
-      }, 2000);
+      setTimeout(() => navigate("/scan"), 2000);
     }
   };
 
   const filteredUsers = Object.entries(users).filter(([uid, user]) => {
-    if (!inputNama.trim()) return false;
+    if (! inputNama. trim()) return false;
     const searchTerm = inputNama.toLowerCase();
     const nama = (user.nama || "").toLowerCase();
     return nama.includes(searchTerm);
   });
 
   const handleSelectUser = (uid, user) => {
-    console.log("👤 User selected:", user);
+    console.log("👤 Selected:", user.nama);
     setSelectedUser({ uid, ... user });
     setInputNama(user.nama);
     setShowDropdown(false);
@@ -162,8 +152,7 @@ const AbsensiForm = () => {
   };
 
   const showAlert = (type, message) => {
-    console.log(`🔔 Alert [${type}]: `, message);
-    setAlert({ show: true, type, message });
+    setAlert({ show:  true, type, message });
     setTimeout(() => {
       setAlert({ show: false, type: "", message: "" });
     }, 5000);
@@ -173,36 +162,29 @@ const AbsensiForm = () => {
     e.preventDefault();
     
     if (!selectedUser) {
-      showAlert("danger", "⚠️ Pilih nama dari daftar yang tersedia!");
+      showAlert("danger", "⚠️ Pilih nama dari daftar!");
       return;
     }
 
-    console.log("📝 Submitting absensi for:", selectedUser);
+    console.log("📝 Submitting:", selectedUser.nama);
     setSubmitting(true);
 
     try {
       const { tahun, bulan, minggu, tanggal } = getTodayPath();
       const absensiPath = `absensi/${tahun}/${bulan}/${minggu}/${tanggal}/${selectedUser.uid}`;
       
-      console.log("📍 Absensi path:", absensiPath);
+      console.log("📍 Path:", absensiPath);
       
       const absensiRef = ref(db, absensiPath);
-
-      // Cek duplikasi
       const snapshot = await get(absensiRef);
       
       if (snapshot.exists()) {
         const existingData = snapshot.val();
-        console.log("⚠️ Already absent today:", existingData);
-        showAlert(
-          "info",
-          `ℹ️ ${selectedUser.nama} sudah absen hari ini pada ${existingData.waktu}`
-        );
+        showAlert("info", `ℹ️ ${selectedUser.nama} sudah absen pada ${existingData.waktu}`);
         setSubmitting(false);
         return;
       }
 
-      // Simpan absensi
       const waktu = formatDateTime(new Date());
       const absensiData = {
         nama: selectedUser.nama,
@@ -210,37 +192,29 @@ const AbsensiForm = () => {
         waktu:  waktu
       };
 
-      console.log("💾 Saving absensi:", absensiData);
+      console.log("💾 Saving:", absensiData);
       await set(absensiRef, absensiData);
 
-      console.log("✅ Absensi saved successfully!");
-      showAlert(
-        "success",
-        `✅ Absensi berhasil!  ${selectedUser.nama} tercatat pada ${waktu}`
-      );
+      console.log("✅ Saved!");
+      showAlert("success", `✅ Absensi berhasil! ${selectedUser.nama} tercatat pada ${waktu}`);
 
-      // Redirect setelah 3 detik
       setTimeout(() => {
-        console.log("🏠 Redirecting to home...");
         navigate("/");
       }, 3000);
 
     } catch (error) {
-      console.error("❌ Error submitting absensi:", error);
-      showAlert("danger", "❌ Gagal menyimpan absensi.  Coba lagi.");
+      console.error("❌ Submit error:", error);
+      showAlert("danger", "❌ Gagal menyimpan");
       setSubmitting(false);
     }
   };
 
-  // ✅ Loading state
+  // Loading
   if (validating) {
     return (
       <div className="absensi-form-page">
         <div className="absensi-container">
-          <div style={{
-            textAlign: "center",
-            padding: "40px 20px"
-          }}>
+          <div style={{ textAlign: "center", padding: "40px 20px" }}>
             <div style={{
               width: "40px",
               height: "40px",
@@ -250,75 +224,77 @@ const AbsensiForm = () => {
               animation: "spin 1s linear infinite",
               margin: "0 auto 16px"
             }}></div>
-            <p style={{ fontSize: "16px", fontWeight: "600", marginBottom: "8px" }}>
-              ⏳ Memvalidasi session...
-            </p>
-            <p style={{ 
-              fontSize: "12px", 
-              color: "#a7b3e6", 
-              fontFamily: "monospace",
-              wordBreak: "break-all",
-              padding: "0 20px"
-            }}>
-              {sessionId}
-            </p>
+            <p>⏳ Memvalidasi session...</p>
+            {SKIP_VALIDATION && (
+              <p style={{ color: "#f59e0b", fontSize: "12px", marginTop: "8px" }}>
+                ⚠️ DEBUG MODE:  Validation bypassed
+              </p>
+            )}
           </div>
         </div>
       </div>
     );
   }
 
-  // ✅ Error state
+  // Error
   if (! sessionValid) {
     return (
       <div className="absensi-form-page">
         <div className="absensi-container">
-          <div style={{
-            textAlign: "center",
-            padding: "40px 20px"
-          }}>
-            <span style={{ fontSize: "48px", marginBottom: "16px", display: "block" }}>❌</span>
-            <p style={{ fontSize: "18px", fontWeight: "600", marginBottom: "8px" }}>
-              Session tidak valid
-            </p>
-            <p style={{ fontSize: "14px", color: "#a7b3e6" }}>
-              Mengarahkan ke halaman scan... 
-            </p>
+          <div style={{ textAlign: "center", padding:  "40px 20px" }}>
+            <span style={{ fontSize: "48px", display: "block", marginBottom: "16px" }}>❌</span>
+            <p style={{ fontSize: "18px", fontWeight: "600" }}>Session tidak valid</p>
+            <p style={{ fontSize: "14px", color: "#a7b3e6" }}>Mengarahkan ke scan... </p>
           </div>
         </div>
       </div>
     );
   }
 
-  // ✅ Main form
+  // Main Form
   return (
     <div className="absensi-form-page">
       <div className="absensi-container">
         <div className="absensi-header">
           <span className="absensi-icon">✍️</span>
           <h1 className="absensi-title">Form Absensi</h1>
-          <p className="absensi-subtitle">Pilih nama Anda untuk melakukan absensi</p>
+          <p className="absensi-subtitle">Pilih nama Anda untuk absensi</p>
         </div>
 
-        {/* ✅ Session Info */}
-        {sessionInfo && (
+        {/* Debug Warning */}
+        {SKIP_VALIDATION && (
           <div style={{
-            background: "rgba(34, 197, 94, 0.1)",
-            border: "1px solid rgba(34, 197, 94, 0.3)",
+            background: "rgba(245,158,11,0.15)",
+            border: "1px solid rgba(245,158,11,0.3)",
             borderRadius: "8px",
             padding: "12px",
-            marginBottom: "20px",
-            fontSize: "13px",
-            color: "#22c55e"
+            marginBottom: "16px",
+            color: "#f59e0b",
+            fontSize: "13px"
           }}>
-            <div style={{ fontWeight: "bold", marginBottom: "4px" }}>✅ QR Code Valid</div>
+            ⚠️ <strong>DEBUG MODE: </strong> Validation is bypassed
+          </div>
+        )}
+
+        {/* Session Info */}
+        {sessionInfo && (
+          <div style={{
+            background: "rgba(34,197,94,0.1)",
+            border: "1px solid rgba(34,197,94,0.3)",
+            borderRadius: "8px",
+            padding: "12px",
+            marginBottom: "16px",
+            color: "#22c55e",
+            fontSize:  "13px"
+          }}>
+            <div style={{ fontWeight: "bold" }}>✅ Session Valid</div>
             <div>Waktu tersisa: {sessionInfo.remainingTime} menit</div>
           </div>
         )}
 
         {/* Alert */}
         {alert.show && (
-          <div className={`alert alert-${alert.type}`} style={{
+          <div style={{
             padding: "12px 16px",
             borderRadius: "8px",
             marginBottom: "16px",
@@ -330,7 +306,7 @@ const AbsensiForm = () => {
                     alert.type === "danger" ?  "1px solid rgba(239,68,68,0.3)" :
                     alert.type === "warning" ? "1px solid rgba(245,158,11,0.3)" :
                     "1px solid rgba(96,165,250,0.3)",
-            color: alert.type === "success" ? "#22c55e" :
+            color: alert.type === "success" ? "#22c55e" : 
                    alert.type === "danger" ?  "#ef4444" :
                    alert.type === "warning" ? "#f59e0b" : 
                    "#60a5fa"
@@ -341,7 +317,7 @@ const AbsensiForm = () => {
 
         {/* Loading */}
         {loading && (
-          <div style={{ textAlign: "center", padding: "20px" }}>
+          <div style={{ textAlign: "center", padding:  "20px" }}>
             <div style={{
               width: "30px",
               height: "30px",
@@ -430,7 +406,6 @@ const AbsensiForm = () => {
         )}
       </div>
 
-      {/* ✅ Add keyframe animation */}
       <style>{`
         @keyframes spin {
           to { transform: rotate(360deg); }

@@ -13,36 +13,78 @@ export function generateSessionId() {
 
 /**
  * Create QR session di Firebase
- * @param {number} durationMinutes - Durasi validitas QR (default: 5 menit)
  */
-export async function createQRSession(durationMinutes = 5) {
-  const sessionId = generateSessionId();
-  const now = Date.now();
-  const expiredAt = now + (durationMinutes * 60 * 1000);
-  
-  const sessionRef = ref(db, `qr_session/${sessionId}`);
-  
-  await set(sessionRef, {
-    aktif: true,
-    createdAt: now,
-    expiredAt: expiredAt
-  });
-  
-  return {
-    sessionId,
-    expiredAt,
-    createdAt: now
-  };
+export async function createQRSession(durationMinutes = 30) { // ✅ Ubah default jadi 30 menit
+  try {
+    const sessionId = generateSessionId();
+    const now = Date.now();
+    const expiredAt = now + (durationMinutes * 60 * 1000);
+    
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("💾 Creating QR Session");
+    console.log("Session ID:", sessionId);
+    console.log("Created at:", new Date(now).toLocaleString());
+    console.log("Expires at:", new Date(expiredAt).toLocaleString());
+    console.log("Duration:", durationMinutes, "minutes");
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    
+    const sessionData = {
+      aktif: true,
+      createdAt: now,
+      expiredAt: expiredAt
+    };
+    
+    const sessionRef = ref(db, `qr_session/${sessionId}`);
+    
+    console.log("📍 Firebase path:", `qr_session/${sessionId}`);
+    console.log("📦 Data to save:", sessionData);
+    
+    // ✅ Save to Firebase
+    await set(sessionRef, sessionData);
+    
+    console.log("✅ Data saved to Firebase");
+    
+    // ✅ Verify save
+    console.log("🔍 Verifying save.. .");
+    const verifySnapshot = await get(sessionRef);
+    
+    if (verifySnapshot.exists()) {
+      const savedData = verifySnapshot.val();
+      console.log("✅ Verification successful!");
+      console.log("Saved data:", savedData);
+    } else {
+      console.error("❌ Verification failed!  Data not found in Firebase");
+      throw new Error("Failed to save session to Firebase");
+    }
+    
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    
+    return {
+      sessionId,
+      expiredAt,
+      createdAt: now
+    };
+    
+  } catch (error) {
+    console.error("❌ Error creating QR session:", error);
+    console.error("Error details:", error. message);
+    console.error("Stack trace:", error.stack);
+    throw error;
+  }
 }
 
 /**
  * Validasi QR session
- * @param {string} sessionId - ID session dari QR code
- * @returns {object} { valid:  boolean, message:  string, expired: boolean, isSystemError: boolean }
  */
 export async function validateQRSession(sessionId) {
   try {
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("🔍 Validating QR Session");
+    console.log("Session ID:", sessionId);
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+
     if (!sessionId) {
+      console.error("❌ No session ID provided");
       return { 
         valid: false, 
         expired: false,
@@ -52,21 +94,35 @@ export async function validateQRSession(sessionId) {
     }
     
     const sessionRef = ref(db, `qr_session/${sessionId}`);
+    console.log("📍 Checking path:", `qr_session/${sessionId}`);
+    
     const snapshot = await get(sessionRef);
+    console.log("📊 Snapshot exists:", snapshot.exists());
     
     if (!snapshot.exists()) {
+      console.error("❌ Session not found in Firebase");
+      console.log("💡 Possible reasons:");
+      console.log("   1. QR session belum/tidak tersimpan");
+      console.log("   2. Session ID salah");
+      console.log("   3. Firebase rules memblokir");
+      
       return { 
         valid: false, 
         expired: false,
         isSystemError: false,
-        message:  "QR Code tidak ditemukan atau sudah dihapus" 
+        message: "QR Code tidak ditemukan.  Generate QR baru dari admin." 
       };
     }
     
     const session = snapshot.val();
+    console.log("📦 Session data:", session);
+    
     const now = Date.now();
+    console.log("🕐 Current time:", now, "(" + new Date(now).toLocaleString() + ")");
+    console.log("🕐 Expired at:", session.expiredAt, "(" + new Date(session.expiredAt).toLocaleString() + ")");
     
     if (! session.aktif) {
+      console.warn("⚠️ Session not active");
       return { 
         valid: false, 
         expired: false,
@@ -76,25 +132,32 @@ export async function validateQRSession(sessionId) {
     }
     
     if (now > session.expiredAt) {
+      const expiredDuration = Math.floor((now - session.expiredAt) / 60000);
+      console.warn("⚠️ Session expired");
+      console.log("Expired", expiredDuration, "minutes ago");
+      
+      // Deactivate expired session
       try {
         await set(sessionRef, {... session, aktif: false});
+        console.log("✅ Session marked as inactive");
       } catch (updateError) {
-        console.warn("Failed to deactivate expired session:", updateError);
+        console.warn("Failed to deactivate:", updateError);
       }
-      
-      const expiredDuration = Math.floor((now - session.expiredAt) / 60000);
       
       return { 
         valid: false, 
         expired: true,
         isSystemError: false,
-        message: `QR Code sudah kadaluarsa ${expiredDuration} menit yang lalu.  Minta QR baru dari admin.`,
+        message: `QR Code sudah kadaluarsa ${expiredDuration} menit yang lalu. Minta QR baru dari admin.`,
         expiredAt: session.expiredAt,
-        expiredDuration:  expiredDuration
+        expiredDuration: expiredDuration
       };
     }
     
     const remainingTime = Math.floor((session.expiredAt - now) / 60000);
+    console.log("✅ Session valid!");
+    console.log("⏱️ Remaining time:", remainingTime, "minutes");
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     
     return { 
       valid: true, 
@@ -106,17 +169,21 @@ export async function validateQRSession(sessionId) {
     };
     
   } catch (error) {
-    console.error("Error validating QR session:", error);
+    console.error("❌ Validation error:", error);
+    console.error("Error message:", error.message);
+    console.error("Stack trace:", error. stack);
     
     return {
       valid: false,
       expired: false,
       isSystemError: true,
-      message: "Tidak dapat terhubung ke server.  Periksa koneksi internet Anda.",
-      error: error. message
+      message: "Tidak dapat terhubung ke server.  Periksa koneksi internet.",
+      error: error.message
     };
   }
 }
+
+// ...  fungsi lainnya tetap sama
 
 /**
  * Deactivate session
