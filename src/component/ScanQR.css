@@ -1,55 +1,71 @@
 /* src/components/ScanQR.css */
-
 .scan-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 20px;
+  padding: clamp(16px, 2vw, 24px);
+  background: 
+    radial-gradient(900px 600px at 10% -10%, rgba(56,189,248,.22) 0%, transparent 45%),
+    radial-gradient(800px 600px at 95% 0%, rgba(168,85,247,.22) 0%, transparent 40%),
+    linear-gradient(135deg, #071a2c, #1b1033);
+  color: #e8eeff;
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
 }
 
 .scan-container {
-  background: white;
-  border-radius: 20px;
-  padding: 30px;
   max-width: 500px;
   width: 100%;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .scan-header {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 24px;
 }
 
 .scan-title {
-  font-size: 28px;
-  font-weight:  700;
-  color: #333;
-  margin-bottom:  10px;
+  margin: 0 0 8px;
+  font-weight: 800;
+  font-size: 1.5rem;
+  background: linear-gradient(90deg, #c7d2fe, #93c5fd, #fef08a);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .scan-subtitle {
-  color:  #666;
-  font-size: 14px;
+  margin: 0;
+  color: #a7b3e6;
+  font-size: 0.9rem;
 }
 
 .qr-reader-wrapper {
-  border-radius: 15px;
-  overflow: hidden;
-  margin-bottom: 20px;
-  position: relative;
+  margin-bottom: 16px;
 }
 
 #qr-reader {
-  width: 100%;
-  border: none;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 #qr-reader video {
-  width: 100% ! important;
-  border-radius:  15px;
+  border-radius: 12px;
+}
+
+@media (max-width: 480px) {
+  .scan-container {
+    padding: 20px;
+  }
+
+  .scan-title {
+    font-size: 1.25rem;
+  }
 }
 
 #qr-reader > div:first-child {
