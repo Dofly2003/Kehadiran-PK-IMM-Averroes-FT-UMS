@@ -125,20 +125,7 @@ const AbsensiHariIni = () => {
             </p>
           </div>
 
-          {/* ✅ QR Code Icon di Tengah */}
-          <div className="header-center">
-            <button 
-              className="btn-qr-icon" 
-              onClick={handleScanQR}
-              aria-label="Scan QR untuk absen"
-            >
-              <img 
-                src="/qr-icon.jpg" 
-                alt="Scan QR Code" 
-                className="qr-icon-img"
-              />
-            </button>
-          </div>
+
 
           {/* Download Button */}
           <div className="header-actions">

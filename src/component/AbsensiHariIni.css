@@ -1,7 +1,6 @@
 :root {
-  /* Tema warna */
   --bg-start: #071a2c;
-  --bg-end:  #1b1033;
+  --bg-end: #1b1033;
   --accent-blue: #60a5fa;
   --accent-green: #22c55e;
   --accent-red: #ef4444;
@@ -13,7 +12,7 @@
   --text:  #e8eeff;
   --muted: #a7b3e6;
 
-  --shadow:  0 10px 30px rgba(0, 0, 0, 0.35);
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
   --radius: 16px;
   --radius-sm: 10px;
 }
@@ -22,7 +21,7 @@
 .absensi-today-page {
   min-height: 100vh;
   padding: clamp(16px, 2vw, 24px);
-  background:
+  background: 
     radial-gradient(900px 600px at 10% -10%, rgba(56,189,248,.22) 0%, transparent 45%),
     radial-gradient(800px 600px at 95% 0%, rgba(168,85,247,.22) 0%, transparent 40%),
     linear-gradient(135deg, var(--bg-start), var(--bg-end));
@@ -32,7 +31,7 @@
 /* ===== HEADER ===== */
 .page-header {
   max-width: 1100px;
-  margin: 0 auto 12px auto;
+  margin: 0 auto 20px auto;  /* ✅ Tambah margin bottom */
   display: flex;
   align-items: center;
   gap: 20px;
@@ -50,7 +49,7 @@
   padding: 4px 10px;
   border-radius:  999px;
   color: #c7d2fe;
-  background: rgba(99,102,241,.18);
+  background:  rgba(99,102,241,.18);
   border: 1px solid rgba(99,102,241,.25);
 }
 
@@ -67,48 +66,83 @@
 .page-subtitle { 
   margin: 0; 
   color: var(--muted); 
+  font-size: 0.9rem;  /* ✅ Sedikit lebih kecil */
 }
 
-/* ✅ Icon Kamera di Tengah */
+/* ===== QR ICON BUTTON ===== */
 .header-center {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.btn-camera-scan {
-  width: 64px;
-  height: 64px;
-  border-radius:  50%;
-  border: 2px solid rgba(167,139,250,.5);
-  background: linear-gradient(135deg, rgba(167,139,250,.15), rgba(99,102,241,.1));
+.btn-qr-icon {
+  width: 56px;
+  height: 56px;
+  border-radius:  12px;
+  border: 2px solid rgba(96,165,250,.4);
+  background: linear-gradient(135deg, rgba(96,165,250,.08), rgba(99,102,241,.06));
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  font-size: 32px;
   cursor: pointer;
   transition: all .3s ease;
-  box-shadow: 0 8px 24px rgba(167,139,250,.2);
+  box-shadow: 0 6px 16px rgba(96,165,250,.15);
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 8px;
+  position: relative;
+  overflow: hidden;
 }
 
-.btn-camera-scan:hover {
-  transform: scale(1.1) rotate(5deg);
-  border-color: rgba(167,139,250,.8);
-  background: linear-gradient(135deg, rgba(167,139,250,.25), rgba(99,102,241,.15));
-  box-shadow: 0 12px 32px rgba(167,139,250,.35);
+.btn-qr-icon::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(135deg, rgba(96,165,250,.3), rgba(167,139,250,.3));
+  border-radius: 12px;
+  opacity: 0;
+  transition: opacity .3s ease;
+  z-index: -1;
 }
 
-.btn-camera-scan:active {
-  transform: scale(0.95);
+.btn-qr-icon:hover {
+  transform: translateY(-3px) scale(1.05);
+  border-color: rgba(96,165,250,.7);
+  background: linear-gradient(135deg, rgba(96,165,250,.15), rgba(99,102,241,.1));
+  box-shadow: 
+    0 10px 24px rgba(96,165,250,.25),
+    0 0 0 3px rgba(96,165,250,.1);
+}
+
+.btn-qr-icon:hover::before {
+  opacity: 1;
+}
+
+.btn-qr-icon:active {
+  transform: translateY(-1px) scale(1.02);
+}
+
+.qr-icon-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(96,165,250,.3));
+  transition: filter .3s ease;
+}
+
+.btn-qr-icon:hover .qr-icon-img {
+  filter: drop-shadow(0 3px 10px rgba(96,165,250,.5));
 }
 
 /* Header Actions */
 .header-actions { 
   display: flex; 
   gap: 10px; 
-  flex-wrap:  wrap;
+  flex-wrap: wrap;
   align-items: center;
 }
 
@@ -159,7 +193,6 @@
   justify-content: space-between;
 }
 
-/* Section card */
 .section-card {
   flex: 1;
   display: flex;
@@ -249,7 +282,7 @@
   border-color: rgba(255,255,255,.14); 
 }
 
-.list-row:active { 
+.list-row:yyactive { 
   transform: scale(.998); 
 }
 
@@ -261,7 +294,7 @@
 }
 
 .list-label {
-  font-size:  .78rem;
+  font-size: .78rem;
   color: var(--muted);
   letter-spacing: .2px;
 }
@@ -275,6 +308,16 @@
 .mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   font-variant-numeric: tabular-nums;
+}
+
+/* Empty state */
+.empty-state {
+  padding: 18px 10px; 
+  text-align: center; 
+  color: var(--muted);
+  border: 1px dashed rgba(255,255,255,.15); 
+  border-radius: 12px; 
+  background: rgba(255,255,255,.03);
 }
 
 /* ===== BUTTONS ===== */
@@ -313,15 +356,20 @@
 @media (max-width: 768px) {
   .page-header {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
+    align-items: center;      /* ✅ Center semua elemen */
+    gap: 12px;                /* ✅ Gap lebih kecil */
+  }
+
+  .title-wrap {
+    text-align: center;       /* ✅ Center text */
+    width: 100%;
   }
 
   .header-center {
-    order: -1;
+    order: -1;                /* ✅ QR icon di atas */
     width: 100%;
     justify-content: center;
-    margin-bottom: 8px;
+    margin-bottom: 12px;
   }
 
   .header-actions { 
@@ -341,157 +389,11 @@
   }
 
   .section-card { 
-    margin-bottom: 8px; 
+    margin-bottom: 12px;
   }
 
   .list-row { 
     flex-direction: row; 
-    align-items: center; 
-  }
-
-  .list-cell { 
-    flex:  1 1 33.333%; 
-    min-width: 0; 
-  }
-}
-
-@media (max-width: 480px) {
-  .stats { 
-    grid-template-columns: 1fr; 
-  }
-
-  .page-title { 
-    font-size:  1.25rem; 
-  }
-
-  .stat-value { 
-    font-size:  1.4rem; 
-  }
-
-  .list-label { 
-    font-size:  .72rem; 
-  }
-
-  .list-value { 
-    font-size: .9rem; 
-  }
-
-  .btn-camera-scan {
-    width: 56px;
-    height: 56px;
-    font-size: 28px;
-  }
-}
-/* ... CSS sebelumnya tetap sama ...*/
-
-/* ✅ QR Icon Button - UKURAN LEBIH KECIL */
-.header-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.btn-qr-icon {
-  width: 56px;           /* ✅ Dikecilkan dari 80px */
-  height: 56px;          /* ✅ Dikecilkan dari 80px */
-  border-radius: 12px;   /* ✅ Dikecilkan dari 16px */
-  border: 2px solid rgba(96,165,250,.4);
-  background:  linear-gradient(135deg, rgba(96,165,250,.08), rgba(99,102,241,.06));
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  cursor: pointer;
-  transition: all .3s ease;
-  box-shadow: 0 6px 16px rgba(96,165,250,.15);  /* ✅ Shadow lebih kecil */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px;          /* ✅ Padding lebih kecil */
-  position: relative;
-  overflow: hidden;
-}
-
-.btn-qr-icon::before {
-  content: '';
-  position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
-  background: linear-gradient(135deg, rgba(96,165,250,.3), rgba(167,139,250,.3));
-  border-radius: 12px;   /* ✅ Sesuaikan dengan border-radius utama */
-  opacity: 0;
-  transition: opacity .3s ease;
-  z-index: -1;
-}
-
-.btn-qr-icon:hover {
-  transform: translateY(-3px) scale(1.05);  /* ✅ Hover movement lebih kecil */
-  border-color: rgba(96,165,250,.7);
-  background: linear-gradient(135deg, rgba(96,165,250,.15), rgba(99,102,241,.1));
-  box-shadow: 
-    0 10px 24px rgba(96,165,250,.25),
-    0 0 0 3px rgba(96,165,250,.1);         /* ✅ Ring lebih kecil */
-}
-
-.btn-qr-icon:hover::before {
-  opacity: 1;
-}
-
-.btn-qr-icon:active {
-  transform: translateY(-1px) scale(1.02);
-}
-
-.qr-icon-img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  filter: drop-shadow(0 2px 6px rgba(96,165,250,.3));
-  transition: filter .3s ease;
-}
-
-.btn-qr-icon:hover .qr-icon-img {
-  filter: drop-shadow(0 3px 10px rgba(96,165,250,.5));
-}
-
-/* ...CSS lainnya tetap sama ...*/
-
-/* ===== RESPONSIVE ===== */
-@media (max-width: 768px) {
-  .page-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-  }
-
-  .header-center {
-    order: -1;
-    width: 100%;
-    justify-content: center;
-    margin-bottom: 8px;
-  }
-
-  .header-actions { 
-    width: 100%; 
-  }
-
-  .header-actions .btn {
-    width: 100%;
-  }
-
-  .grid-2 { 
-    flex-direction: column; 
-  }
-
-  .grid-2 > .section-card { 
-    width: 100%; 
-  }
-
-  .section-card { 
-    margin-bottom: 8px; 
-  }
-
-  .list-row { 
-    flex-direction:  row; 
     align-items: center; 
   }
 
@@ -507,11 +409,15 @@
   }
 
   .page-title { 
-    font-size: 1.25rem; 
+    font-size:  1.25rem; 
+  }
+
+  .page-subtitle {
+    font-size: 0.85rem;
   }
 
   .stat-value { 
-    font-size: 1.4rem; 
+    font-size:  1.4rem; 
   }
 
   .list-label { 
@@ -519,12 +425,17 @@
   }
 
   .list-value { 
-    font-size:  .9rem; 
+    font-size: .9rem; 
   }
 
-  /* ✅ Mobile:  Sedikit lebih kecil lagi */
+  /* ✅ QR Icon lebih kecil di mobile */
   .btn-qr-icon {
-    width:  48px;
-    height:  48px;
+    width: 52px;
+    height: 52px;
+  }
+
+  /* ✅ Compact header */
+  .page-header {
+    margin-bottom: 16px;
   }
 }
