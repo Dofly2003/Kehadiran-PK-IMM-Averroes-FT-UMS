@@ -1,4 +1,4 @@
-// src/components/AbsensiForm.jsx
+// src/component/AbsensiForm. jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { db } from "../firebase";
@@ -17,21 +17,19 @@ const AbsensiForm = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [alert, setAlert] = useState({ show: false, type: "", message: "" });
-
-  // ✅ LANGSUNG LOAD - TIDAK ADA VALIDASI
+  const [alertMsg, setAlertMsg] = useState({ show: false, type: "", message: "" }); // ✅ GANTI DARI alert
+  
   useEffect(() => {
     console.log("📋 AbsensiForm loaded");
     console.log("Session ID:", sessionId);
 
     if (! sessionId) {
-      alert("❌ No session ID!");
+      console.error("❌ No session ID");
       navigate("/scan");
       return;
     }
 
-    // ✅ LANGSUNG LOAD USERS - SKIP VALIDASI
-    console.log("✅ Loading users directly.. .");
+    console.log("✅ Loading users.. .");
     loadUsers();
   }, []);
 
@@ -45,7 +43,7 @@ const AbsensiForm = () => {
       setLoading(false);
     }, (error) => {
       console.error("❌ Error loading users:", error);
-      alert("Error loading users:  " + error. message);
+      showAlert("danger", "Gagal memuat data users:  " + error.message);
       setLoading(false);
     });
 
@@ -54,8 +52,8 @@ const AbsensiForm = () => {
 
   const filteredUsers = Object.entries(users).filter(([uid, user]) => {
     if (!inputNama. trim()) return false;
-    const searchTerm = inputNama. toLowerCase();
-    const nama = (user.nama || "").toLowerCase();
+    const searchTerm = inputNama.toLowerCase();
+    const nama = (user. nama || "").toLowerCase();
     return nama.includes(searchTerm);
   });
 
@@ -64,7 +62,7 @@ const AbsensiForm = () => {
     setSelectedUser({ uid, ... user });
     setInputNama(user.nama);
     setShowDropdown(false);
-    setAlert({ show: false, type: "", message: "" });
+    setAlertMsg({ show: false, type: "", message: "" }); // ✅ GANTI
   };
 
   const handleInputChange = (e) => {
@@ -75,9 +73,9 @@ const AbsensiForm = () => {
   };
 
   const showAlert = (type, message) => {
-    setAlert({ show:  true, type, message });
+    setAlertMsg({ show: true, type, message }); // ✅ GANTI
     setTimeout(() => {
-      setAlert({ show: false, type: "", message: "" });
+      setAlertMsg({ show: false, type: "", message:  "" }); // ✅ GANTI
     }, 5000);
   };
 
@@ -132,7 +130,6 @@ const AbsensiForm = () => {
     }
   };
 
-  // Loading state
   if (loading) {
     return (
       <div className="absensi-form-page">
@@ -154,7 +151,6 @@ const AbsensiForm = () => {
     );
   }
 
-  // Main Form
   return (
     <div className="absensi-form-page">
       <div className="absensi-container">
@@ -166,40 +162,40 @@ const AbsensiForm = () => {
 
         {/* Debug Info */}
         <div style={{
-          background: "rgba(245,158,11,0.15)",
-          border: "1px solid rgba(245,158,11,0.3)",
+          background: "rgba(96,165,250,0.15)",
+          border: "1px solid rgba(96,165,250,0.3)",
           borderRadius: "8px",
           padding: "12px",
           marginBottom: "16px",
-          color: "#f59e0b",
+          color: "#60a5fa",
           fontSize: "13px"
         }}>
-          ⚠️ <strong>DEBUG MODE:</strong> Session validation disabled<br />
-          <small style={{ fontSize: "11px", fontFamily: "monospace" }}>
-            Session:  {sessionId?. substring(0, 30)}...
+          ℹ️ <strong>Session ID:</strong><br />
+          <small style={{ fontSize: "11px", fontFamily: "monospace", wordBreak: "break-all" }}>
+            {sessionId}
           </small>
         </div>
 
         {/* Alert */}
-        {alert.show && (
+        {alertMsg.show && ( // ✅ GANTI
           <div style={{
             padding: "12px 16px",
             borderRadius:  "8px",
             marginBottom: "16px",
-            background: alert.type === "success" ? "rgba(34,197,94,0.15)" :
-                       alert.type === "danger" ? "rgba(239,68,68,0.15)" :
-                       alert.type === "info" ? "rgba(96,165,250,0.15)" :
+            background: alertMsg.type === "success" ?  "rgba(34,197,94,0.15)" :
+                       alertMsg.type === "danger" ? "rgba(239,68,68,0.15)" :
+                       alertMsg.type === "info" ?  "rgba(96,165,250,0.15)" :
                        "rgba(245,158,11,0.15)",
-            border: alert.type === "success" ? "1px solid rgba(34,197,94,0.3)" :
-                    alert.type === "danger" ?  "1px solid rgba(239,68,68,0.3)" :
-                    alert.type === "info" ? "1px solid rgba(96,165,250,0.3)" :
+            border: alertMsg.type === "success" ?  "1px solid rgba(34,197,94,0.3)" :
+                    alertMsg.type === "danger" ? "1px solid rgba(239,68,68,0.3)" :
+                    alertMsg. type === "info" ? "1px solid rgba(96,165,250,0.3)" :
                     "1px solid rgba(245,158,11,0.3)",
-            color: alert.type === "success" ? "#22c55e" :
-                   alert.type === "danger" ?  "#ef4444" :
-                   alert.type === "info" ? "#60a5fa" :
+            color: alertMsg.type === "success" ? "#22c55e" :
+                   alertMsg.type === "danger" ? "#ef4444" :
+                   alertMsg.type === "info" ?  "#60a5fa" :
                    "#f59e0b"
           }}>
-            {alert.message}
+            {alertMsg.message} {/* ✅ GANTI */}
           </div>
         )}
 
