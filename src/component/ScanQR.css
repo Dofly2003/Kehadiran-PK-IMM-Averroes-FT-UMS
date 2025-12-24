@@ -1,6 +1,6 @@
 /* src/components/ScanQR.css */
 
-. scan-page {
+.scan-page {
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 20px;
@@ -30,7 +30,7 @@
   margin-bottom:  10px;
 }
 
-. scan-subtitle {
+.scan-subtitle {
   color:  #666;
   font-size: 14px;
 }
@@ -52,7 +52,7 @@
   border-radius:  15px;
 }
 
-#qr-reader > div: first-child {
+#qr-reader > div:first-child {
   display:  block ! important;
 }
 
