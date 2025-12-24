@@ -10,9 +10,10 @@ const ScanQR = () => {
   const scannerRef = useRef(null);
   const [scanning, setScanning] = useState(false);
   const [message, setMessage] = useState("");
-  const [messageType, setMessageType] = useState("info"); // ✅ info, warning, error, success
+  const [messageType, setMessageType] = useState("info");
   const [cameraError, setCameraError] = useState(false);
   const isInitialized = useRef(false);
+  const processingRef = useRef(false); // ✅ Prevent double scan
 
   useEffect(() => {
     if (isInitialized.current) return;
@@ -28,7 +29,7 @@ const ScanQR = () => {
   const startScanner = async () => {
     try {
       if (scannerRef.current) {
-        console.log("Scanner already running");
+        console.log("⚠️ Scanner already running");
         return;
       }
 
@@ -39,7 +40,10 @@ const ScanQR = () => {
         { facingMode: "environment" },
         {
           fps: 10,
-          qrbox: { width: 250, height: 250 }
+          qrbox: { width: 250, height: 250 },
+          aspectRatio: 1.0,
+          // ✅ Disable flip untuk performa lebih baik
+          disableFlip: false
         },
         onScanSuccess,
         onScanError
@@ -48,9 +52,12 @@ const ScanQR = () => {
       setScanning(true);
       setMessage("📷 Arahkan kamera ke QR Code");
       setMessageType("info");
+      processingRef.current = false; // ✅ Reset processing flag
+      
+      console.log("✅ Scanner started successfully");
       
     } catch (error) {
-      console.error("Camera error:", error);
+      console.error("❌ Camera error:", error);
       setCameraError(true);
       setMessage("❌ Tidak dapat mengakses kamera.  Pastikan izin kamera diaktifkan.");
       setMessageType("error");
@@ -61,65 +68,105 @@ const ScanQR = () => {
     if (scannerRef.current) {
       try {
         const state = scannerRef.current.getState();
-        if (state === 2) {
+        if (state === 2) { // SCANNING state
           await scannerRef.current.stop();
         }
-        scannerRef.current.clear();
+        await scannerRef.current.clear();
         scannerRef.current = null;
+        console.log("✅ Scanner stopped");
       } catch (error) {
-        console.error("Error stopping scanner:", error);
+        console.error("⚠️ Error stopping scanner:", error);
+        scannerRef.current = null;
       }
     }
   };
 
   const onScanSuccess = async (decodedText) => {
-    console.log("QR Scanned:", decodedText);
+    // ✅ Prevent double processing
+    if (processingRef. current) {
+      console.log("⚠️ Already processing, ignoring scan");
+      return;
+    }
+
+    console.log("📷 QR Scanned:", decodedText);
     
-    if (! scanning) return;
+    if (! scanning) {
+      console.log("⚠️ Not in scanning mode");
+      return;
+    }
+
+    processingRef.current = true; // ✅ Lock processing
     
     try {
-      const qrData = JSON.parse(decodedText);
+      // ✅ Parse QR code
+      let qrData;
+      try {
+        qrData = JSON.parse(decodedText);
+        console.log("✅ Parsed QR data:", qrData);
+      } catch (parseError) {
+        console.error("❌ Parse error:", parseError);
+        setMessage("⚠️ QR Code tidak valid!  Format salah.");
+        setMessageType("warning");
+        
+        setTimeout(() => {
+          resetScanner();
+        }, 2000);
+        return;
+      }
+
+      // ✅ Validasi struktur QR
+      if (! qrData.sessionId || !qrData.expiredAt) {
+        console.error("❌ QR incomplete:", qrData);
+        setMessage("⚠️ QR Code tidak lengkap! Minta QR baru dari admin.");
+        setMessageType("warning");
+        
+        setTimeout(() => {
+          resetScanner();
+        }, 3000);
+        return;
+      }
+
       const { sessionId } = qrData;
 
+      // Stop scanner sebelum validasi
       await stopScanner();
       setScanning(false);
       setMessage("⏳ Memvalidasi QR Code...");
       setMessageType("info");
 
       // ✅ Validasi session
+      console.log("🔍 Validating session:", sessionId);
       const validation = await validateQRSession(sessionId);
+      console.log("📊 Validation result:", validation);
 
-      // ✅ QR EXPIRED - Tampilkan WARNING (bukan error)
+      // ✅ QR EXPIRED
       if (validation.expired) {
+        console.log("⚠️ QR expired");
         setMessage(`⚠️ ${validation.message}`);
-        setMessageType("warning"); // ✅ Warning kuning, bukan error merah
+        setMessageType("warning");
         
         setTimeout(() => {
-          setMessage("📷 Arahkan kamera ke QR Code");
-          setMessageType("info");
-          isInitialized.current = false;
-          startScanner();
+          resetScanner();
         }, 4000);
         return;
       }
 
-      // ✅ ERROR SISTEM (jaringan, dll)
+      // ✅ ERROR SISTEM
       if (validation.isSystemError) {
+        console.log("❌ System error");
         setMessage(`❌ ${validation.message}`);
-        setMessageType("error"); // ✅ Error merah untuk sistem error
+        setMessageType("error");
         
         setTimeout(() => {
-          setMessage("📷 Arahkan kamera ke QR Code");
-          setMessageType("info");
-          isInitialized.current = false;
-          startScanner();
+          resetScanner();
         }, 4000);
         return;
       }
 
       // ✅ QR VALID
       if (validation.valid) {
-        setMessage("✅ QR Valid!  Mengarahkan ke form absensi.. .");
+        console.log("✅ QR valid, navigating to form");
+        setMessage("✅ QR Valid! Mengarahkan ke form absensi.. .");
         setMessageType("success");
         
         setTimeout(() => {
@@ -128,33 +175,38 @@ const ScanQR = () => {
         return;
       }
 
-      // ✅ QR TIDAK VALID (tapi bukan expired)
+      // ✅ QR TIDAK VALID (lainnya)
+      console.log("⚠️ QR invalid:", validation.message);
       setMessage(`⚠️ ${validation.message}`);
       setMessageType("warning");
       
       setTimeout(() => {
-        setMessage("📷 Arahkan kamera ke QR Code");
-        setMessageType("info");
-        isInitialized.current = false;
-        startScanner();
+        resetScanner();
       }, 3000);
       
     } catch (error) {
-      console.error("QR Parse error:", error);
-      setMessage("⚠️ QR Code tidak valid. Scan ulang.");
-      setMessageType("warning"); // ✅ QR rusak = warning, bukan error
+      console.error("❌ Scan processing error:", error);
+      setMessage("❌ Terjadi kesalahan:  " + error.message);
+      setMessageType("error");
       
       setTimeout(() => {
-        setMessage("📷 Arahkan kamera ke QR Code");
-        setMessageType("info");
-        isInitialized.current = false;
-        startScanner();
-      }, 2000);
+        resetScanner();
+      }, 3000);
     }
   };
 
+  const resetScanner = () => {
+    console.log("🔄 Resetting scanner.. .");
+    processingRef.current = false;
+    isInitialized.current = false;
+    setMessage("📷 Arahkan kamera ke QR Code");
+    setMessageType("info");
+    startScanner();
+  };
+
   const onScanError = (errorMessage) => {
-    // Ignore
+    // ✅ Ignore scan errors (normal saat kamera mencari QR)
+    // Jangan log untuk avoid console spam
   };
 
   return (
@@ -169,23 +221,35 @@ const ScanQR = () => {
           <div id="qr-reader"></div>
         </div>
 
-        {/* ✅ Status Message dengan warna berbeda */}
-        <div className={`scan-message ${messageType}`}>
-          {message}
-        </div>
+        {/* ✅ Status Message */}
+        {message && (
+          <div className={`scan-message ${messageType}`}>
+            {message}
+          </div>
+        )}
 
+        {/* ✅ Camera Error Help */}
         {cameraError && (
           <div className="error-help">
-            <p><strong>Troubleshooting:</strong></p>
+            <p><strong>⚠️ Troubleshooting:</strong></p>
             <ul>
               <li>Pastikan browser memiliki izin kamera</li>
               <li>Gunakan HTTPS (bukan HTTP)</li>
               <li>Coba refresh halaman</li>
+              <li>Coba browser lain (Chrome/Firefox)</li>
             </ul>
+            <button 
+              className="btn btn-primary" 
+              onClick={() => window.location.reload()}
+              style={{marginTop: "12px"}}
+            >
+              🔄 Refresh Halaman
+            </button>
           </div>
         )}
 
-        {!cameraError && (
+        {/* ✅ Back Button */}
+        {! cameraError && (
           <button className="btn-back" onClick={() => navigate("/")}>
             ← Kembali
           </button>

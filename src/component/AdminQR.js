@@ -12,13 +12,12 @@ const AdminQR = () => {
   const [qrCodeUrl, setQrCodeUrl] = useState("");
   const [sessionData, setSessionData] = useState(null);
   const [countdown, setCountdown] = useState(30);
+  const [qrString, setQrString] = useState(""); // ✅ Store QR string untuk debug
 
   const TOTP_SECRET = process.env.REACT_APP_TOTP_SECRET;
 
-  // Debug:  Log secret saat component mount
   useEffect(() => {
-    console.log("TOTP_SECRET dari . env:", TOTP_SECRET);
-    console.log("TOTP_SECRET ada? ", !!TOTP_SECRET);
+    console.log("🔑 TOTP_SECRET:", TOTP_SECRET ?  "Loaded" : "Missing");
   }, [TOTP_SECRET]);
 
   // Check session
@@ -49,27 +48,20 @@ const AdminQR = () => {
     e.preventDefault();
     setAuthError("");
 
-    console.log("=== DEBUG TOTP ===");
-    console.log("Input code:", totpCode);
-    console.log("Secret:", TOTP_SECRET);
-
     if (! TOTP_SECRET) {
       setAuthError("TOTP secret belum di-setup!  Jalankan /setup-authenticator dulu.");
       return;
     }
 
     const isValid = verifyTOTP(totpCode, TOTP_SECRET);
-    console.log("Verification result:", isValid);
 
     if (isValid) {
-      console.log("✅ Kode valid!");
       setIsAuthenticated(true);
       localStorage.setItem("admin_auth_time", Date.now().toString());
       setAuthError("");
       setTotpCode("");
     } else {
-      console.log("❌ Kode salah!");
-      setAuthError("Kode salah!  Pastikan kode dari Authenticator App.");
+      setAuthError("Kode salah! Pastikan kode dari Authenticator App.");
       setTotpCode("");
     }
   };
@@ -79,11 +71,13 @@ const AdminQR = () => {
     localStorage.removeItem("admin_auth_time");
     setQrCodeUrl("");
     setSessionData(null);
+    setQrString("");
   };
 
+  // ✅ Generate QR dengan error correction tinggi
   const generateQR = async () => {
     try {
-      const duration = 5;
+      const duration = 5; // 5 menit
       const session = await createQRSession(duration);
       
       const qrPayload = {
@@ -91,18 +85,50 @@ const AdminQR = () => {
         expiredAt: session.expiredAt
       };
 
-      const qrString = JSON.stringify(qrPayload);
-      const qrImage = await QRCode.toDataURL(qrString, {
+      const qrStr = JSON.stringify(qrPayload);
+      
+      // ✅ Debug logs
+      console.log("📋 QR Payload:", qrPayload);
+      console.log("📋 QR String:", qrStr);
+      console.log("📋 Session:", session);
+
+      // ✅ Test parse ulang untuk validasi
+      try {
+        const testParse = JSON.parse(qrStr);
+        console.log("✅ QR dapat di-parse kembali:", testParse);
+      } catch (parseErr) {
+        console.error("❌ QR tidak bisa di-parse:", parseErr);
+        alert("Error: QR payload tidak valid!");
+        return;
+      }
+
+      // ✅ Generate QR dengan error correction level HIGH
+      const qrImage = await QRCode.toDataURL(qrStr, {
         width: 400,
-        margin: 2
+        margin: 2,
+        errorCorrectionLevel: 'H', // ✅ High error correction (30%)
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        }
       });
 
       setQrCodeUrl(qrImage);
       setSessionData(session);
+      setQrString(qrStr); // ✅ Simpan untuk display
+
+      console.log("✅ QR Code berhasil di-generate!");
+      
     } catch (error) {
-      console.error("Error generating QR:", error);
-      alert("Gagal generate QR Code");
+      console.error("❌ Error generating QR:", error);
+      alert("Gagal generate QR Code:  " + error.message);
     }
+  };
+
+  // ✅ Copy QR string untuk testing
+  const copyQRString = () => {
+    navigator.clipboard.writeText(qrString);
+    alert("✅ QR string berhasil dicopy!  Paste di JSON validator untuk test.");
   };
 
   if (! isAuthenticated) {
@@ -126,7 +152,7 @@ const AdminQR = () => {
                 className="form-control flat-input"
                 placeholder="000000"
                 value={totpCode}
-                onChange={(e) => setTotpCode(e.target.value. replace(/\D/g, "").slice(0, 6))}
+                onChange={(e) => setTotpCode(e.target. value. replace(/\D/g, "").slice(0, 6))}
                 maxLength={6}
                 pattern="[0-9]{6}"
                 autoFocus
@@ -137,7 +163,7 @@ const AdminQR = () => {
                   fontFamily: "monospace"
                 }}
               />
-              <small style={{color: "#a0aec0", display: "block", marginTop: "8px"}}>
+              <small style={{color: "#a0aec0", display: "block", marginTop:  "8px"}}>
                 Buka <strong>Google Authenticator</strong> atau <strong>Microsoft Authenticator</strong>
               </small>
             </div>
@@ -148,19 +174,6 @@ const AdminQR = () => {
               </div>
             )}
 
-            {/* Debug info */}
-            <div style={{
-              background: "#f7fafc",
-              padding: "12px",
-              borderRadius: "8px",
-              marginBottom: "16px",
-              fontSize: "12px",
-              fontFamily: "monospace"
-            }}>
-              <div>Secret loaded: {TOTP_SECRET ?  "✅ Yes" : "❌ No"}</div>
-              <div>Secret: {TOTP_SECRET ?  TOTP_SECRET. substring(0, 8) + "..." : "Not found"}</div>
-            </div>
-
             <button 
               type="submit" 
               className="btn btn-gradient"
@@ -169,6 +182,11 @@ const AdminQR = () => {
               🔓 Verifikasi & Masuk
             </button>
           </form>
+
+          <div className="alert alert-info" style={{marginTop: "20px", fontSize: "13px"}}>
+            💡 <strong>Belum setup? </strong><br />
+            Akses <a href="/setup-authenticator">/setup-authenticator</a> untuk scan QR pertama kali
+          </div>
         </div>
       </div>
     );
@@ -185,7 +203,7 @@ const AdminQR = () => {
           <button 
             onClick={handleLogout}
             className="btn btn-sm btn-outline-danger"
-            style={{marginTop: "10px"}}
+            style={{marginTop:  "10px"}}
           >
             🚪 Logout
           </button>
@@ -208,7 +226,7 @@ const AdminQR = () => {
                   <span className="status-badge active">🟢 Aktif</span>
                 </div>
                 <div className="info-row">
-                  <span className="info-label">Dibuat:</span>
+                  <span className="info-label">Dibuat: </span>
                   <span className="info-value">
                     {new Date(sessionData.createdAt).toLocaleString("id-ID")}
                   </span>
@@ -216,9 +234,53 @@ const AdminQR = () => {
                 <div className="info-row">
                   <span className="info-label">Berlaku sampai:</span>
                   <span className="info-value">
-                    {new Date(sessionData.expiredAt).toLocaleString("id-ID")}
+                    {new Date(sessionData. expiredAt).toLocaleString("id-ID")}
                   </span>
                 </div>
+                <div className="info-row">
+                  <span className="info-label">Session ID:</span>
+                  <span className="info-value mono" style={{fontSize: "11px"}}>
+                    {sessionData. sessionId. substring(0, 25)}...
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* ✅ Debug Panel */}
+            {qrString && (
+              <div style={{
+                background: "#f7fafc",
+                border: "1px solid #e2e8f0",
+                borderRadius: "8px",
+                padding: "12px",
+                marginTop: "16px"
+              }}>
+                <div style={{
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  marginBottom: "8px",
+                  color: "#2d3748"
+                }}>
+                  🔍 Debug: QR String
+                </div>
+                <div style={{
+                  background: "#fff",
+                  padding: "8px",
+                  borderRadius: "4px",
+                  fontFamily: "monospace",
+                  fontSize: "11px",
+                  wordBreak: "break-all",
+                  color: "#1a202c"
+                }}>
+                  {qrString}
+                </div>
+                <button
+                  onClick={copyQRString}
+                  className="btn btn-sm btn-outline-danger"
+                  style={{marginTop: "8px", width: "100%"}}
+                >
+                  📋 Copy QR String (untuk testing)
+                </button>
               </div>
             )}
           </div>
