@@ -1,4 +1,4 @@
-// src/components/AbsensiForm.jsx
+// src/components/AbsensiForm. jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { db } from "../firebase";
@@ -20,29 +20,34 @@ const AbsensiForm = () => {
   const [submitting, setSubmitting] = useState(false);
   const [alert, setAlert] = useState({ show: false, type: "", message: "" });
   const [sessionValid, setSessionValid] = useState(false);
-  const [validating, setValidating] = useState(true); // ✅ Track validation state
+  const [validating, setValidating] = useState(true);
+  const [sessionInfo, setSessionInfo] = useState(null);
 
-  // ✅ Validasi session saat mount
+  // Validasi session saat mount
   useEffect(() => {
-    console.log("📋 AbsensiForm mounted");
-    console.log("🔍 Session ID dari URL:", sessionId);
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("📋 AbsensiForm Loaded");
+    console.log("🔍 Full URL:", window.location.href);
+    console.log("🔍 Session ID from URL:", sessionId);
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    
     validateSession();
   }, [sessionId]);
 
-  // ✅ Fetch users setelah session valid
+  // Fetch users setelah session valid
   useEffect(() => {
     if (! sessionValid) {
       console.log("⚠️ Session not valid, skipping user fetch");
       return;
     }
 
-    console.log("✅ Session valid, fetching users.. .");
+    console.log("✅ Session valid, loading users...");
 
     const usersRef = ref(db, "users/terdaftar");
     
     const unsubscribe = onValue(usersRef, (snapshot) => {
       const val = snapshot.val();
-      console.log("📊 Users loaded:", val);
+      console.log("📊 Users loaded:", Object.keys(val || {}).length, "users");
       setUsers(val || {});
       setLoading(false);
     }, (error) => {
@@ -55,43 +60,76 @@ const AbsensiForm = () => {
   }, [sessionValid]);
 
   const validateSession = async () => {
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     console.log("🔍 Starting session validation...");
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     
     if (!sessionId) {
-      console.error("❌ No session ID provided");
+      console.error("❌ No session ID in URL");
       showAlert("danger", "Session tidak valid.  Scan QR Code terlebih dahulu.");
       setValidating(false);
       
       setTimeout(() => {
-        console.log("🔄 Redirecting to /scan");
         navigate("/scan");
       }, 2000);
       return;
     }
 
     try {
-      console.log("🔍 Validating session:", sessionId);
+      console.log("🔍 Calling validateQRSession()...");
+      console.log("Session ID:", sessionId);
+      
+      // ✅ Call validation function
       const validation = await validateQRSession(sessionId);
-      console.log("📊 Validation result:", validation);
+      
+      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+      console.log("📊 Validation Result:");
+      console.log(JSON.stringify(validation, null, 2));
+      console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
+      // ✅ Handle system error
+      if (validation.isSystemError) {
+        console.error("❌ System error:", validation.message);
+        showAlert("danger", validation.message);
+        setValidating(false);
+        return;
+      }
+
+      // ✅ Handle expired session
+      if (validation.expired) {
+        console.warn("⚠️ Session expired:", validation.message);
+        showAlert("warning", validation.message);
+        setValidating(false);
+        
+        setTimeout(() => {
+          navigate("/scan");
+        }, 3000);
+        return;
+      }
+
+      // ✅ Handle invalid session
       if (! validation.valid) {
         console.error("❌ Session invalid:", validation.message);
         showAlert("danger", validation.message);
         setValidating(false);
         
         setTimeout(() => {
-          console. log("🔄 Redirecting to /scan");
           navigate("/scan");
         }, 2000);
         return;
       }
 
+      // ✅ Session valid! 
       console.log("✅ Session valid!");
+      console.log("Remaining time:", validation.remainingTime, "minutes");
+      
       setSessionValid(true);
+      setSessionInfo(validation);
       setValidating(false);
 
     } catch (error) {
       console.error("❌ Validation error:", error);
+      console.error("Error stack:", error.stack);
       showAlert("danger", "Gagal memvalidasi session:  " + error.message);
       setValidating(false);
       
@@ -102,7 +140,7 @@ const AbsensiForm = () => {
   };
 
   const filteredUsers = Object.entries(users).filter(([uid, user]) => {
-    if (!inputNama. trim()) return false;
+    if (!inputNama.trim()) return false;
     const searchTerm = inputNama.toLowerCase();
     const nama = (user.nama || "").toLowerCase();
     return nama.includes(searchTerm);
@@ -169,7 +207,7 @@ const AbsensiForm = () => {
       const absensiData = {
         nama: selectedUser.nama,
         uid: selectedUser.uid,
-        waktu: waktu
+        waktu:  waktu
       };
 
       console.log("💾 Saving absensi:", absensiData);
@@ -194,28 +232,55 @@ const AbsensiForm = () => {
     }
   };
 
-  // ✅ Show loading saat validasi
+  // ✅ Loading state
   if (validating) {
     return (
       <div className="absensi-form-page">
         <div className="absensi-container">
-          <div className="loading-message">
-            <div className="spinner"></div>
-            <p>⏳ Memvalidasi session...</p>
+          <div style={{
+            textAlign: "center",
+            padding: "40px 20px"
+          }}>
+            <div style={{
+              width: "40px",
+              height: "40px",
+              border: "4px solid rgba(255,255,255,0.1)",
+              borderTopColor: "#60a5fa",
+              borderRadius: "50%",
+              animation: "spin 1s linear infinite",
+              margin: "0 auto 16px"
+            }}></div>
+            <p style={{ fontSize: "16px", fontWeight: "600", marginBottom: "8px" }}>
+              ⏳ Memvalidasi session...
+            </p>
+            <p style={{ 
+              fontSize: "12px", 
+              color: "#a7b3e6", 
+              fontFamily: "monospace",
+              wordBreak: "break-all",
+              padding: "0 20px"
+            }}>
+              {sessionId}
+            </p>
           </div>
         </div>
       </div>
     );
   }
 
-  // ✅ Show error jika session invalid
-  if (!sessionValid) {
+  // ✅ Error state
+  if (! sessionValid) {
     return (
       <div className="absensi-form-page">
         <div className="absensi-container">
-          <div className="error-message">
-            <span style={{ fontSize: "48px", marginBottom: "16px" }}>❌</span>
-            <p>Session tidak valid</p>
+          <div style={{
+            textAlign: "center",
+            padding: "40px 20px"
+          }}>
+            <span style={{ fontSize: "48px", marginBottom: "16px", display: "block" }}>❌</span>
+            <p style={{ fontSize: "18px", fontWeight: "600", marginBottom: "8px" }}>
+              Session tidak valid
+            </p>
             <p style={{ fontSize: "14px", color: "#a7b3e6" }}>
               Mengarahkan ke halaman scan... 
             </p>
@@ -225,6 +290,7 @@ const AbsensiForm = () => {
     );
   }
 
+  // ✅ Main form
   return (
     <div className="absensi-form-page">
       <div className="absensi-container">
@@ -234,37 +300,62 @@ const AbsensiForm = () => {
           <p className="absensi-subtitle">Pilih nama Anda untuk melakukan absensi</p>
         </div>
 
-        {/* ✅ Debug Info */}
-        <div style={{
-          background: "#f7fafc",
-          border: "1px solid #e2e8f0",
-          borderRadius: "8px",
-          padding: "12px",
-          marginBottom: "20px",
-          fontSize: "12px",
-          fontFamily: "monospace",
-          color: "#1a202c"
-        }}>
-          <div style={{ fontWeight: "bold", marginBottom: "8px" }}>🔍 Debug Info: </div>
-          <div>Session ID: {sessionId ?  sessionId. substring(0, 25) + "..." : "None"}</div>
-          <div>Session Valid: {sessionValid ? "✅ Yes" : "❌ No"}</div>
-          <div>Total Users: {Object.keys(users).length}</div>
-          <div>Selected User: {selectedUser ? selectedUser.nama : "None"}</div>
-        </div>
+        {/* ✅ Session Info */}
+        {sessionInfo && (
+          <div style={{
+            background: "rgba(34, 197, 94, 0.1)",
+            border: "1px solid rgba(34, 197, 94, 0.3)",
+            borderRadius: "8px",
+            padding: "12px",
+            marginBottom: "20px",
+            fontSize: "13px",
+            color: "#22c55e"
+          }}>
+            <div style={{ fontWeight: "bold", marginBottom: "4px" }}>✅ QR Code Valid</div>
+            <div>Waktu tersisa: {sessionInfo.remainingTime} menit</div>
+          </div>
+        )}
 
+        {/* Alert */}
         {alert.show && (
-          <div className={`alert alert-${alert.type}`}>
+          <div className={`alert alert-${alert.type}`} style={{
+            padding: "12px 16px",
+            borderRadius: "8px",
+            marginBottom: "16px",
+            background: alert.type === "success" ? "rgba(34,197,94,0.15)" :
+                       alert.type === "danger" ? "rgba(239,68,68,0.15)" :
+                       alert.type === "warning" ? "rgba(245,158,11,0.15)" :
+                       "rgba(96,165,250,0.15)",
+            border: alert.type === "success" ? "1px solid rgba(34,197,94,0.3)" :
+                    alert.type === "danger" ?  "1px solid rgba(239,68,68,0.3)" :
+                    alert.type === "warning" ? "1px solid rgba(245,158,11,0.3)" :
+                    "1px solid rgba(96,165,250,0.3)",
+            color: alert.type === "success" ? "#22c55e" :
+                   alert.type === "danger" ?  "#ef4444" :
+                   alert.type === "warning" ? "#f59e0b" : 
+                   "#60a5fa"
+          }}>
             {alert.message}
           </div>
         )}
 
+        {/* Loading */}
         {loading && (
-          <div className="loading">
-            <div className="spinner"></div>
+          <div style={{ textAlign: "center", padding: "20px" }}>
+            <div style={{
+              width: "30px",
+              height: "30px",
+              border: "3px solid rgba(255,255,255,0.1)",
+              borderTopColor: "#60a5fa",
+              borderRadius: "50%",
+              animation: "spin 1s linear infinite",
+              margin: "0 auto 12px"
+            }}></div>
             <p>⏳ Memuat data... </p>
           </div>
         )}
 
+        {/* Form */}
         {!loading && (
           <form onSubmit={handleSubmit}>
             <div className="form-group">
@@ -314,7 +405,7 @@ const AbsensiForm = () => {
                 </div>
                 <div className="user-info-row">
                   <span className="user-info-label">Bidang</span>
-                  <span className="user-info-value">{selectedUser. bidang}</span>
+                  <span className="user-info-value">{selectedUser.bidang}</span>
                 </div>
               </div>
             )}
@@ -338,6 +429,13 @@ const AbsensiForm = () => {
           </form>
         )}
       </div>
+
+      {/* ✅ Add keyframe animation */}
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 };
