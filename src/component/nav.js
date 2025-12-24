@@ -57,17 +57,6 @@ const Navbar = () => {
                 Log Absensi
               </NavLink>
             </li>
-            <li className="nav-item">
-              <NavLink
-                to="/scan"
-                className={({ isActive }) =>
-                  "nav-link app-nav-link " + (isActive ? "active" : "")
-                }
-              >
-                <span className="me-1">📷</span>
-                Scan QR
-              </NavLink>
-            </li>
           </ul>
         </div>
       </div>
