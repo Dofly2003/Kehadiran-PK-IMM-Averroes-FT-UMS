@@ -59,24 +59,13 @@ const Navbar = () => {
             </li>
             <li className="nav-item">
               <NavLink
-                to="/scan-qr"
+                to="/scan"
                 className={({ isActive }) =>
                   "nav-link app-nav-link " + (isActive ? "active" : "")
                 }
               >
                 <span className="me-1">📷</span>
                 Scan QR
-              </NavLink>
-            </li>
-            <li className="nav-item">
-              <NavLink
-                to="/admin-qr"
-                className={({ isActive }) =>
-                  "nav-link app-nav-link " + (isActive ? "active" : "")
-                }
-              >
-                <span className="me-1">🔐</span>
-                Admin QR
               </NavLink>
             </li>
           </ul>

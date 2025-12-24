@@ -10,11 +10,11 @@ const ScanQR = () => {
   const scannerRef = useRef(null);
   const [scanning, setScanning] = useState(false);
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState("info"); // ✅ info, warning, error, success
   const [cameraError, setCameraError] = useState(false);
-  const isInitialized = useRef(false); // ✅ Prevent double initialization
+  const isInitialized = useRef(false);
 
   useEffect(() => {
-    // ✅ Prevent double mount (React StrictMode)
     if (isInitialized.current) return;
     isInitialized.current = true;
 
@@ -27,8 +27,7 @@ const ScanQR = () => {
 
   const startScanner = async () => {
     try {
-      // ✅ Cek apakah scanner sudah ada
-      if (scannerRef. current) {
+      if (scannerRef.current) {
         console.log("Scanner already running");
         return;
       }
@@ -37,7 +36,7 @@ const ScanQR = () => {
       scannerRef.current = html5QrCode;
 
       await html5QrCode.start(
-        { facingMode: "environment" }, // Back camera
+        { facingMode: "environment" },
         {
           fps: 10,
           qrbox: { width: 250, height: 250 }
@@ -48,24 +47,25 @@ const ScanQR = () => {
 
       setScanning(true);
       setMessage("📷 Arahkan kamera ke QR Code");
+      setMessageType("info");
       
     } catch (error) {
       console.error("Camera error:", error);
       setCameraError(true);
       setMessage("❌ Tidak dapat mengakses kamera.  Pastikan izin kamera diaktifkan.");
+      setMessageType("error");
     }
   };
 
   const stopScanner = async () => {
     if (scannerRef.current) {
       try {
-        // ✅ Cek state sebelum stop
-        const state = scannerRef.current. getState();
-        if (state === 2) { // 2 = SCANNING
+        const state = scannerRef.current.getState();
+        if (state === 2) {
           await scannerRef.current.stop();
         }
         scannerRef.current.clear();
-        scannerRef.current = null; // ✅ Reset ref
+        scannerRef.current = null;
       } catch (error) {
         console.error("Error stopping scanner:", error);
       }
@@ -75,55 +75,86 @@ const ScanQR = () => {
   const onScanSuccess = async (decodedText) => {
     console.log("QR Scanned:", decodedText);
     
-    // ✅ Prevent multiple scans
     if (! scanning) return;
     
     try {
-      // Parse QR content
       const qrData = JSON.parse(decodedText);
       const { sessionId } = qrData;
 
-      // Stop scanner
       await stopScanner();
       setScanning(false);
-      setMessage("⏳ Memvalidasi QR Code.. .");
+      setMessage("⏳ Memvalidasi QR Code...");
+      setMessageType("info");
 
-      // Validasi session
+      // ✅ Validasi session
       const validation = await validateQRSession(sessionId);
 
-      if (validation.valid) {
-        setMessage("✅ QR Valid! Mengarahkan ke form absensi...");
+      // ✅ QR EXPIRED - Tampilkan WARNING (bukan error)
+      if (validation.expired) {
+        setMessage(`⚠️ ${validation.message}`);
+        setMessageType("warning"); // ✅ Warning kuning, bukan error merah
         
-        setTimeout(() => {
-          navigate(`/absensi?session=${sessionId}`);
-        }, 1000);
-        
-      } else {
-        setMessage(`❌ ${validation.message}`);
-        
-        // Restart scanner setelah 3 detik
         setTimeout(() => {
           setMessage("📷 Arahkan kamera ke QR Code");
-          isInitialized.current = false; // ✅ Reset flag
+          setMessageType("info");
+          isInitialized.current = false;
           startScanner();
-        }, 3000);
+        }, 4000);
+        return;
       }
-      
-    } catch (error) {
-      console.error("QR Parse error:", error);
-      setMessage("❌ QR Code tidak valid. Scan ulang.");
+
+      // ✅ ERROR SISTEM (jaringan, dll)
+      if (validation.isSystemError) {
+        setMessage(`❌ ${validation.message}`);
+        setMessageType("error"); // ✅ Error merah untuk sistem error
+        
+        setTimeout(() => {
+          setMessage("📷 Arahkan kamera ke QR Code");
+          setMessageType("info");
+          isInitialized.current = false;
+          startScanner();
+        }, 4000);
+        return;
+      }
+
+      // ✅ QR VALID
+      if (validation.valid) {
+        setMessage("✅ QR Valid!  Mengarahkan ke form absensi.. .");
+        setMessageType("success");
+        
+        setTimeout(() => {
+          navigate(`/absensi? session=${sessionId}`);
+        }, 1000);
+        return;
+      }
+
+      // ✅ QR TIDAK VALID (tapi bukan expired)
+      setMessage(`⚠️ ${validation.message}`);
+      setMessageType("warning");
       
       setTimeout(() => {
         setMessage("📷 Arahkan kamera ke QR Code");
-        isInitialized.current = false; // ✅ Reset flag
+        setMessageType("info");
+        isInitialized.current = false;
+        startScanner();
+      }, 3000);
+      
+    } catch (error) {
+      console.error("QR Parse error:", error);
+      setMessage("⚠️ QR Code tidak valid. Scan ulang.");
+      setMessageType("warning"); // ✅ QR rusak = warning, bukan error
+      
+      setTimeout(() => {
+        setMessage("📷 Arahkan kamera ke QR Code");
+        setMessageType("info");
+        isInitialized.current = false;
         startScanner();
       }, 2000);
     }
   };
 
   const onScanError = (errorMessage) => {
-    // Ignore scan errors (terlalu banyak false positive)
-    // console.log("Scan error:", errorMessage);
+    // Ignore
   };
 
   return (
@@ -134,19 +165,18 @@ const ScanQR = () => {
           <p className="scan-subtitle">Arahkan kamera ke QR Code dari admin</p>
         </div>
 
-        {/* QR Reader Container - ✅ Hanya 1 container */}
         <div className="qr-reader-wrapper">
           <div id="qr-reader"></div>
         </div>
 
-        {/* Status Message */}
-        <div className={`scan-message ${cameraError ?  'error' : ''}`}>
+        {/* ✅ Status Message dengan warna berbeda */}
+        <div className={`scan-message ${messageType}`}>
           {message}
         </div>
 
         {cameraError && (
           <div className="error-help">
-            <p><strong>Troubleshooting: </strong></p>
+            <p><strong>Troubleshooting:</strong></p>
             <ul>
               <li>Pastikan browser memiliki izin kamera</li>
               <li>Gunakan HTTPS (bukan HTTP)</li>

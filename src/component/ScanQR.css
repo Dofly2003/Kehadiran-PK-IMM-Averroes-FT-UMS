@@ -1,7 +1,8 @@
-/* src/components/ScanQR.css */
+/* src/components/ScanQR. css */
+
 .scan-page {
   min-height: 100vh;
-  background:  linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 20px;
   display: flex;
   justify-content: center;
@@ -34,7 +35,6 @@
   font-size: 14px;
 }
 
-/* ✅ Pastikan hanya 1 video muncul */
 .qr-reader-wrapper {
   border-radius: 15px;
   overflow: hidden;
@@ -47,41 +47,99 @@
   border: none;
 }
 
-/* ✅ Sembunyikan video duplikat jika ada */
 #qr-reader video {
   width: 100% !important;
   border-radius: 15px;
 }
 
-#qr-reader canvas {
-  display: none; /* ✅ Sembunyikan canvas overlay jika tidak perlu */
-}
-
-/* ✅ Hanya tampilkan 1 video element */
 #qr-reader > div: first-child {
-  display:  block ! important;
+  display: block ! important;
 }
 
 #qr-reader > div:not(:first-child) {
   display: none !important;
 }
 
-. scan-message {
-  background:  #e3f2fd;
-  color: #1976d2;
-  padding: 15px;
-  border-radius: 10px;
+/* ✅ Message dengan berbagai status */
+.scan-message {
+  padding: 15px 20px;
+  border-radius:  12px;
   text-align: center;
   font-weight: 500;
   margin-bottom: 20px;
+  font-size: 15px;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
 }
 
-.scan-message.error {
+/* ✅ Info (biru) - scanning normal */
+.scan-message.info {
+  background:  #e3f2fd;
+  color: #1565c0;
+  border-color: #90caf9;
+}
+
+/* ✅ Warning (kuning/orange) - QR expired / tidak valid */
+.scan-message. warning {
+  background: #fff3e0;
+  color:  #e65100;
+  border-color: #ffb74d;
+  animation: pulse 0.5s ease;
+}
+
+/* ✅ Error (merah) - sistem error / network error */
+.scan-message. error {
   background: #ffebee;
   color: #c62828;
+  border-color: #ef5350;
+  animation: shake 0.5s ease;
 }
 
-.error-help {
+/* ✅ Success (hijau) - QR valid */
+.scan-message.success {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border-color: #66bb6a;
+  animation: bounceIn 0.5s ease;
+}
+
+/* Animasi */
+@keyframes pulse {
+  0%, 100% {
+    transform:  scale(1);
+  }
+  50% {
+    transform:  scale(1.02);
+  }
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+. error-help {
   background: #fff3e0;
   border: 1px solid #ff9800;
   border-radius: 10px;
@@ -98,15 +156,15 @@
   width: 100%;
   padding:  12px;
   background:  #6c757d;
-  color: white;
+  color:  white;
   border: none;
   border-radius: 10px;
-  font-size: 16px;
-  font-weight: 600;
+  font-size:  16px;
+  font-weight:  600;
   cursor: pointer;
   transition: background 0.3s;
 }
 
 .btn-back:hover {
-  background:  #5a6268;
+  background: #5a6268;
 }
