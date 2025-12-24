@@ -19,32 +19,49 @@ const AbsensiForm = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [alertMsg, setAlertMsg] = useState({ show: false, type: "", message: "" });
+  const [deviceLocked, setDeviceLocked] = useState(false); // ✅ NEW
   
   useEffect(() => {
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    console.log("📋 AbsensiForm MOUNTED");
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    console.log("Current URL:", window.location.href);
-    console.log("Pathname:", window.location.pathname);
-    console.log("Search:", window.location.search);
-    console.log("Location state:", location);
-    console.log("SearchParams:", searchParams. toString());
-    console.log("Session ID from searchParams. get('session'):", sessionId);
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("📋 AbsensiForm loaded");
+    console.log("Session ID:", sessionId);
 
-    // ✅ TEMPORARY: Disable redirect untuk debugging
     if (!sessionId) {
-      console.error("❌ NO SESSION ID FOUND!");
-      console.warn("⚠️ REDIRECT DISABLED FOR DEBUGGING");
-      
-      // ⚠️ COMMENT redirect sementara
-      // navigate("/scan");
-      // return;
+      console.error("❌ No session ID");
+      navigate("/scan");
+      return;
     }
 
-    console.log("✅ Loading users...");
+    // ✅ Check if device already used today
+    checkDeviceLock();
     loadUsers();
   }, []);
+
+  // ✅ NEW: Check jika device sudah absen hari ini
+  const checkDeviceLock = () => {
+    try {
+      const { tanggal } = getTodayPath();
+      const storageKey = `absen_lock_${tanggal}`; // e.g., absen_lock_24
+      const locked = localStorage.getItem(storageKey);
+      
+      console.log("🔒 Checking device lock...");
+      console.log("Storage key:", storageKey);
+      console.log("Locked data:", locked);
+
+      if (locked) {
+        const lockData = JSON.parse(locked);
+        console.log("⚠️ Device already used today:", lockData);
+        
+        setDeviceLocked(true);
+        showAlert("warning", 
+          `⚠️ Device ini sudah digunakan untuk absensi hari ini oleh ${lockData.nama} pada ${lockData.waktu}`
+        );
+      } else {
+        console.log("✅ Device belum digunakan");
+      }
+    } catch (error) {
+      console.error("❌ Error checking device lock:", error);
+    }
+  };
 
   const loadUsers = () => {
     const usersRef = ref(db, "users/terdaftar");
@@ -95,6 +112,12 @@ const AbsensiForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // ✅ Check device lock
+    if (deviceLocked) {
+      showAlert("danger", "⚠️ Device ini sudah digunakan untuk absensi hari ini!");
+      return;
+    }
+
     if (!selectedUser) {
       showAlert("danger", "⚠️ Pilih nama dari daftar!");
       return;
@@ -112,8 +135,10 @@ const AbsensiForm = () => {
       const absensiRef = ref(db, absensiPath);
       const snapshot = await get(absensiRef);
       
+      // ✅ Check duplicate by UID
       if (snapshot.exists()) {
         const existingData = snapshot.val();
+        console.log("⚠️ User already absent:", existingData);
         showAlert("info", `ℹ️ ${selectedUser.nama} sudah absen pada ${existingData.waktu}`);
         setSubmitting(false);
         return;
@@ -123,14 +148,28 @@ const AbsensiForm = () => {
       const absensiData = {
         nama: selectedUser.nama,
         uid: selectedUser.uid,
-        waktu:  waktu
+        waktu: waktu
       };
 
       console.log("💾 Saving:", absensiData);
       await set(absensiRef, absensiData);
 
+      // ✅ LOCK DEVICE - Simpan ke localStorage
+      const storageKey = `absen_lock_${tanggal}`;
+      const lockData = {
+        nama: selectedUser.nama,
+        uid: selectedUser.uid,
+        waktu: waktu,
+        tanggal: tanggal
+      };
+      
+      localStorage.setItem(storageKey, JSON.stringify(lockData));
+      console.log("🔒 Device locked:", lockData);
+
       console.log("✅ Saved!");
       showAlert("success", `✅ Absensi berhasil!  ${selectedUser.nama} tercatat pada ${waktu}`);
+
+      setDeviceLocked(true); // ✅ Set locked state
 
       setTimeout(() => {
         navigate("/");
@@ -173,42 +212,37 @@ const AbsensiForm = () => {
           <p className="absensi-subtitle">Pilih nama Anda untuk absensi</p>
         </div>
 
-        {/* ✅ Debug Info */}
-        <div style={{
-          background: sessionId ? "rgba(96,165,250,0.15)" : "rgba(239,68,68,0.15)",
-          border: sessionId ? "1px solid rgba(96,165,250,0.3)" : "1px solid rgba(239,68,68,0.3)",
-          borderRadius: "8px",
-          padding: "12px",
-          marginBottom: "16px",
-          color: sessionId ? "#60a5fa" : "#ef4444",
-          fontSize: "13px"
-        }}>
-          <strong>🔍 Debug Info:</strong><br />
-          <div style={{ fontSize: "11px", fontFamily: "monospace", marginTop: "8px" }}>
-            <div>Current URL: {window.location.href}</div>
-            <div>Pathname:  {window.location.pathname}</div>
-            <div>Search:  {window.location.search}</div>
-            <div style={{ 
-              marginTop: "8px", 
-              padding: "8px", 
-              background: "rgba(0,0,0,0.2)", 
-              borderRadius: "4px",
-              wordBreak: "break-all"
-            }}>
-              Session ID: {sessionId || "❌ NULL"}
+        {/* ✅ Device Lock Warning */}
+        {deviceLocked && (
+          <div style={{
+            background: "rgba(239,68,68,0.15)",
+            border: "2px solid rgba(239,68,68,0.5)",
+            borderRadius: "8px",
+            padding: "16px",
+            marginBottom: "16px",
+            textAlign: "center"
+          }}>
+            <div style={{ fontSize: "48px", marginBottom: "8px" }}>🔒</div>
+            <div style={{ color: "#ef4444", fontWeight: "bold", fontSize: "16px", marginBottom: "8px" }}>
+              Device Terkunci
+            </div>
+            <div style={{ color: "#dc2626", fontSize: "14px" }}>
+              Device ini sudah digunakan untuk absensi hari ini. 
+              <br />
+              <strong>Tidak bisa absen lagi sampai besok. </strong>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Alert */}
-        {alertMsg. show && (
+        {alertMsg.show && (
           <div style={{
             padding: "12px 16px",
-            borderRadius:  "8px",
+            borderRadius: "8px",
             marginBottom: "16px",
-            background: alertMsg.type === "success" ? "rgba(34,197,94,0.15)" :
+            background: alertMsg.type === "success" ?  "rgba(34,197,94,0.15)" :
                        alertMsg.type === "danger" ? "rgba(239,68,68,0.15)" :
-                       alertMsg.type === "info" ? "rgba(96,165,250,0.15)" :
+                       alertMsg.type === "info" ?  "rgba(96,165,250,0.15)" :
                        "rgba(245,158,11,0.15)",
             border: alertMsg.type === "success" ?  "1px solid rgba(34,197,94,0.3)" :
                     alertMsg.type === "danger" ? "1px solid rgba(239,68,68,0.3)" :
@@ -235,10 +269,10 @@ const AbsensiForm = () => {
               onChange={handleInputChange}
               onFocus={() => setShowDropdown(inputNama.trim().length > 0)}
               autoComplete="off"
-              disabled={submitting}
+              disabled={submitting || deviceLocked} // ✅ Disable jika locked
             />
 
-            {showDropdown && (
+            {showDropdown && ! deviceLocked && ( // ✅ Hide dropdown jika locked
               <div className="autocomplete-dropdown">
                 {filteredUsers.length === 0 ? (
                   <div className="empty-state">Nama tidak ditemukan</div>
@@ -260,7 +294,7 @@ const AbsensiForm = () => {
             )}
           </div>
 
-          {selectedUser && (
+          {selectedUser && ! deviceLocked && (
             <div className="user-info">
               <div className="user-info-row">
                 <span className="user-info-label">UID</span>
@@ -280,9 +314,15 @@ const AbsensiForm = () => {
           <button
             type="submit"
             className="btn btn-primary"
-            disabled={! selectedUser || submitting}
+            disabled={! selectedUser || submitting || deviceLocked} // ✅ Disable jika locked
+            style={{
+              opacity: deviceLocked ? 0.5 : 1,
+              cursor: deviceLocked ? "not-allowed" : "pointer"
+            }}
           >
-            {submitting ? "⏳ Menyimpan..." : "✓ Absen Sekarang"}
+            {deviceLocked ? "🔒 Device Terkunci" : 
+             submitting ? "⏳ Menyimpan..." :  
+             "✓ Absen Sekarang"}
           </button>
 
           <button
@@ -294,6 +334,28 @@ const AbsensiForm = () => {
             ← Scan Ulang
           </button>
         </form>
+
+        {/* ✅ Info Reset */}
+        {deviceLocked && (
+          <div style={{
+            marginTop: "16px",
+            padding: "12px",
+            background: "rgba(96,165,250,0.1)",
+            border: "1px solid rgba(96,165,250,0.3)",
+            borderRadius: "8px",
+            fontSize: "13px",
+            color: "#60a5fa"
+          }}>
+            💡 <strong>Info:</strong> Lock akan otomatis reset besok (00:00).
+            <br />
+            Untuk testing, buka Console (F12) dan ketik: <code style={{ 
+              background: "rgba(0,0,0,0.3)", 
+              padding: "2px 6px", 
+              borderRadius:  "4px",
+              fontFamily: "monospace"
+            }}>localStorage.clear()</code>
+          </div>
+        )}
       </div>
 
       <style>{`
