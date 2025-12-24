@@ -1,22 +1,22 @@
-/* src/components/AbsensiForm.css */
+/* src/components/AbsensiForm. css */
 
-.absensi-form-page {
+. absensi-form-page {
   min-height: 100vh;
   background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding:  20px;
+  padding: 20px;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-. absensi-container {
+.absensi-container {
   background: white;
   border-radius: 24px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow:  0 20px 60px rgba(0, 0, 0, 0.3);
   padding: 40px;
-  max-width: 500px;
-  width: 100%;
+  max-width:  500px;
+  width:  100%;
   animation: slideUp 0.4s ease-out;
 }
 
@@ -45,14 +45,14 @@
 .absensi-title {
   font-size: 28px;
   font-weight: 700;
-  color: #1a202c;
-  margin: 0 0 8px 0;
+  color:  #1a202c;
+  margin:  0 0 8px 0;
 }
 
 .absensi-subtitle {
   color: #718096;
-  font-size: 14px;
-  margin: 0;
+  font-size:  14px;
+  margin:  0;
 }
 
 .form-group {
@@ -72,14 +72,14 @@
   width: 100%;
   padding: 14px 16px;
   border: 2px solid #e2e8f0;
-  border-radius:  12px;
+  border-radius: 12px;
   font-size: 16px;
   transition: all 0.2s;
   box-sizing: border-box;
   background: white;
 }
 
-. form-input:focus {
+.form-input:focus {
   outline: none;
   border-color: #10b981;
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
@@ -88,9 +88,9 @@
 .autocomplete-dropdown {
   position: absolute;
   top: 100%;
-  left:  0;
+  left: 0;
   right: 0;
-  background: white;
+  background:  white;
   border: 2px solid #10b981;
   border-radius: 12px;
   margin-top: 4px;
@@ -130,7 +130,7 @@
   background: #f0fdf4;
   border-radius: 12px;
   padding: 16px;
-  margin-bottom:  24px;
+  margin-bottom: 24px;
   border:  2px solid #d1fae5;
 }
 
@@ -140,7 +140,7 @@
   margin-bottom: 8px;
 }
 
-.user-info-row:last-child {
+.user-info-row: last-child {
   margin-bottom: 0;
 }
 
@@ -158,15 +158,15 @@
 
 .btn {
   width: 100%;
-  padding: 16px;
+  padding:  16px;
   border: none;
   border-radius: 12px;
-  font-size:  16px;
+  font-size: 16px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s;
-  text-transform:  uppercase;
-  letter-spacing:  0.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   margin-bottom: 12px;
 }
 
@@ -198,7 +198,7 @@
   background: #cbd5e0;
 }
 
-. alert {
+.alert {
   padding: 16px;
   border-radius: 12px;
   margin-bottom: 20px;

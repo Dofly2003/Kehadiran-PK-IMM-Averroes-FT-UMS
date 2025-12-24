@@ -1,6 +1,6 @@
-/* src/components/ScanQR. css */
+/* src/components/ScanQR.css */
 
-.scan-page {
+. scan-page {
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 20px;
@@ -27,11 +27,11 @@
   font-size: 28px;
   font-weight:  700;
   color: #333;
-  margin-bottom: 10px;
+  margin-bottom:  10px;
 }
 
-.scan-subtitle {
-  color: #666;
+. scan-subtitle {
+  color:  #666;
   font-size: 14px;
 }
 
@@ -48,22 +48,22 @@
 }
 
 #qr-reader video {
-  width: 100% !important;
-  border-radius: 15px;
+  width: 100% ! important;
+  border-radius:  15px;
 }
 
 #qr-reader > div: first-child {
-  display: block ! important;
+  display:  block ! important;
 }
 
 #qr-reader > div:not(:first-child) {
   display: none !important;
 }
 
-/* ✅ Message dengan berbagai status */
+/* Message dengan berbagai status */
 .scan-message {
   padding: 15px 20px;
-  border-radius:  12px;
+  border-radius: 12px;
   text-align: center;
   font-weight: 500;
   margin-bottom: 20px;
@@ -72,30 +72,30 @@
   border: 2px solid transparent;
 }
 
-/* ✅ Info (biru) - scanning normal */
+/* Info (biru) - scanning normal */
 .scan-message.info {
-  background:  #e3f2fd;
+  background: #e3f2fd;
   color: #1565c0;
   border-color: #90caf9;
 }
 
-/* ✅ Warning (kuning/orange) - QR expired / tidak valid */
-.scan-message. warning {
+/* Warning (kuning/orange) - QR expired / tidak valid */
+.scan-message.warning {
   background: #fff3e0;
-  color:  #e65100;
+  color: #e65100;
   border-color: #ffb74d;
   animation: pulse 0.5s ease;
 }
 
-/* ✅ Error (merah) - sistem error / network error */
-.scan-message. error {
+/* Error (merah) - sistem error / network error */
+.scan-message.error {
   background: #ffebee;
   color: #c62828;
   border-color: #ef5350;
-  animation: shake 0.5s ease;
+  animation:  shake 0.5s ease;
 }
 
-/* ✅ Success (hijau) - QR valid */
+/* Success (hijau) - QR valid */
 .scan-message.success {
   background: #e8f5e9;
   color: #2e7d32;
@@ -106,10 +106,10 @@
 /* Animasi */
 @keyframes pulse {
   0%, 100% {
-    transform:  scale(1);
+    transform: scale(1);
   }
   50% {
-    transform:  scale(1.02);
+    transform: scale(1.02);
   }
 }
 
@@ -134,12 +134,12 @@
     transform: scale(1.05);
   }
   100% {
-    transform: scale(1);
+    transform:  scale(1);
     opacity: 1;
   }
 }
 
-. error-help {
+.error-help {
   background: #fff3e0;
   border: 1px solid #ff9800;
   border-radius: 10px;
@@ -154,13 +154,13 @@
 
 .btn-back {
   width: 100%;
-  padding:  12px;
-  background:  #6c757d;
+  padding: 12px;
+  background: #6c757d;
   color:  white;
   border: none;
   border-radius: 10px;
   font-size:  16px;
-  font-weight:  600;
+  font-weight: 600;
   cursor: pointer;
   transition: background 0.3s;
 }

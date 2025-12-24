@@ -1,4 +1,4 @@
-/* src/components/AbsensiScan. css */
+/* src/components/AbsensiScan.css */
 
 .scan-page {
   min-height: 100vh;
@@ -10,20 +10,20 @@
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-.scan-container {
-  background: white;
-  border-radius: 24px;
-  box-shadow:  0 20px 60px rgba(0, 0, 0, 0.3);
+. scan-container {
+  background:  white;
+  border-radius:  24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   padding: 40px;
-  max-width:  500px;
-  width:  100%;
+  max-width: 500px;
+  width: 100%;
   animation: slideUp 0.4s ease-out;
 }
 
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform:  translateY(30px);
+    transform: translateY(30px);
   }
   to {
     opacity: 1;
@@ -38,21 +38,21 @@
 
 .scan-icon {
   font-size: 64px;
-  margin-bottom:  16px;
+  margin-bottom: 16px;
   display: block;
 }
 
 .scan-title {
   font-size: 28px;
-  font-weight:  700;
+  font-weight: 700;
   color: #1a202c;
-  margin:  0 0 8px 0;
+  margin: 0 0 8px 0;
 }
 
 .scan-subtitle {
   color: #718096;
-  font-size:  14px;
-  margin:  0;
+  font-size: 14px;
+  margin: 0;
 }
 
 .form-group {
@@ -60,11 +60,11 @@
   position: relative;
 }
 
-. form-label {
+.form-label {
   display: block;
   font-weight: 600;
   color: #2d3748;
-  margin-bottom: 8px;
+  margin-bottom:  8px;
   font-size: 14px;
 }
 
@@ -79,7 +79,7 @@
   background: white;
 }
 
-. form-input:focus {
+.form-input:focus {
   outline: none;
   border-color: #667eea;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
@@ -90,13 +90,13 @@
   top: 100%;
   left: 0;
   right: 0;
-  background:  white;
+  background: white;
   border: 2px solid #667eea;
   border-radius: 12px;
-  margin-top: 4px;
+  margin-top:  4px;
   max-height: 240px;
-  overflow-y:  auto;
-  z-index:  10;
+  overflow-y: auto;
+  z-index: 10;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
 }
 
@@ -122,12 +122,12 @@
 }
 
 .autocomplete-meta {
-  font-size: 12px;
-  color: #718096;
+  font-size:  12px;
+  color:  #718096;
 }
 
-.user-info {
-  background: #f7fafc;
+. user-info {
+  background:  #f7fafc;
   border-radius: 12px;
   padding: 16px;
   margin-bottom: 24px;
@@ -139,7 +139,7 @@
   margin-bottom: 8px;
 }
 
-.user-info-row: last-child {
+.user-info-row:last-child {
   margin-bottom: 0;
 }
 
@@ -157,7 +157,7 @@
 
 .btn {
   width: 100%;
-  padding:  16px;
+  padding: 16px;
   border: none;
   border-radius: 12px;
   font-size:  16px;
@@ -173,12 +173,12 @@
   color: white;
 }
 
-.btn-primary:hover: not(:disabled) {
+.btn-primary:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
 }
 
-.btn-primary:active: not(:disabled) {
+.btn-primary:active:not(:disabled) {
   transform: translateY(0);
 }
 
@@ -187,7 +187,7 @@
   cursor: not-allowed;
 }
 
-.alert {
+. alert {
   padding: 16px;
   border-radius: 12px;
   margin-bottom: 20px;
@@ -209,12 +209,12 @@
 
 .alert-danger {
   background: #f8d7da;
-  color:  #721c24;
+  color: #721c24;
   border: 1px solid #f5c6cb;
 }
 
-. alert-info {
-  background:  #d1ecf1;
+.alert-info {
+  background: #d1ecf1;
   color: #0c5460;
   border: 1px solid #bee5eb;
 }
@@ -223,17 +223,16 @@
   text-align: center;
   color: #718096;
   padding: 20px;
-  font-size:  14px;
+  font-size: 14px;
 }
 
 .empty-state {
   text-align: center;
   color: #a0aec0;
   padding: 12px;
-  font-size:  14px;
+  font-size: 14px;
 }
 
-/* Responsive */
 @media (max-width: 576px) {
   .scan-container {
     padding: 24px;
