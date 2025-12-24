@@ -1,6 +1,6 @@
-// src/component/AbsensiForm. jsx
+// src/component/AbsensiForm.jsx
 import React, { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { db } from "../firebase";
 import { ref, onValue, get, set } from "firebase/database";
 import { getTodayPath, formatDateTime } from "../utils/dateHelper";
@@ -8,6 +8,7 @@ import "./AbsensiForm.css";
 
 const AbsensiForm = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get("session");
 
@@ -17,19 +18,31 @@ const AbsensiForm = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [alertMsg, setAlertMsg] = useState({ show: false, type: "", message: "" }); // ✅ GANTI DARI alert
+  const [alertMsg, setAlertMsg] = useState({ show: false, type: "", message: "" });
   
   useEffect(() => {
-    console.log("📋 AbsensiForm loaded");
-    console.log("Session ID:", sessionId);
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("📋 AbsensiForm MOUNTED");
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("Current URL:", window.location.href);
+    console.log("Pathname:", window.location.pathname);
+    console.log("Search:", window.location.search);
+    console.log("Location state:", location);
+    console.log("SearchParams:", searchParams. toString());
+    console.log("Session ID from searchParams. get('session'):", sessionId);
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
-    if (! sessionId) {
-      console.error("❌ No session ID");
-      navigate("/scan");
-      return;
+    // ✅ TEMPORARY: Disable redirect untuk debugging
+    if (!sessionId) {
+      console.error("❌ NO SESSION ID FOUND!");
+      console.warn("⚠️ REDIRECT DISABLED FOR DEBUGGING");
+      
+      // ⚠️ COMMENT redirect sementara
+      // navigate("/scan");
+      // return;
     }
 
-    console.log("✅ Loading users.. .");
+    console.log("✅ Loading users...");
     loadUsers();
   }, []);
 
@@ -53,7 +66,7 @@ const AbsensiForm = () => {
   const filteredUsers = Object.entries(users).filter(([uid, user]) => {
     if (!inputNama. trim()) return false;
     const searchTerm = inputNama.toLowerCase();
-    const nama = (user. nama || "").toLowerCase();
+    const nama = (user.nama || "").toLowerCase();
     return nama.includes(searchTerm);
   });
 
@@ -62,7 +75,7 @@ const AbsensiForm = () => {
     setSelectedUser({ uid, ... user });
     setInputNama(user.nama);
     setShowDropdown(false);
-    setAlertMsg({ show: false, type: "", message: "" }); // ✅ GANTI
+    setAlertMsg({ show: false, type: "", message: "" });
   };
 
   const handleInputChange = (e) => {
@@ -73,9 +86,9 @@ const AbsensiForm = () => {
   };
 
   const showAlert = (type, message) => {
-    setAlertMsg({ show: true, type, message }); // ✅ GANTI
+    setAlertMsg({ show: true, type, message });
     setTimeout(() => {
-      setAlertMsg({ show: false, type: "", message:  "" }); // ✅ GANTI
+      setAlertMsg({ show: false, type: "", message:  "" });
     }, 5000);
   };
 
@@ -110,7 +123,7 @@ const AbsensiForm = () => {
       const absensiData = {
         nama: selectedUser.nama,
         uid: selectedUser.uid,
-        waktu: waktu
+        waktu:  waktu
       };
 
       console.log("💾 Saving:", absensiData);
@@ -160,31 +173,42 @@ const AbsensiForm = () => {
           <p className="absensi-subtitle">Pilih nama Anda untuk absensi</p>
         </div>
 
-        {/* Debug Info */}
+        {/* ✅ Debug Info */}
         <div style={{
-          background: "rgba(96,165,250,0.15)",
-          border: "1px solid rgba(96,165,250,0.3)",
+          background: sessionId ? "rgba(96,165,250,0.15)" : "rgba(239,68,68,0.15)",
+          border: sessionId ? "1px solid rgba(96,165,250,0.3)" : "1px solid rgba(239,68,68,0.3)",
           borderRadius: "8px",
           padding: "12px",
           marginBottom: "16px",
-          color: "#60a5fa",
+          color: sessionId ? "#60a5fa" : "#ef4444",
           fontSize: "13px"
         }}>
-          ℹ️ <strong>Session ID:</strong><br />
-          <small style={{ fontSize: "11px", fontFamily: "monospace", wordBreak: "break-all" }}>
-            {sessionId}
-          </small>
+          <strong>🔍 Debug Info:</strong><br />
+          <div style={{ fontSize: "11px", fontFamily: "monospace", marginTop: "8px" }}>
+            <div>Current URL: {window.location.href}</div>
+            <div>Pathname:  {window.location.pathname}</div>
+            <div>Search:  {window.location.search}</div>
+            <div style={{ 
+              marginTop: "8px", 
+              padding: "8px", 
+              background: "rgba(0,0,0,0.2)", 
+              borderRadius: "4px",
+              wordBreak: "break-all"
+            }}>
+              Session ID: {sessionId || "❌ NULL"}
+            </div>
+          </div>
         </div>
 
         {/* Alert */}
-        {alertMsg.show && ( // ✅ GANTI
+        {alertMsg. show && (
           <div style={{
             padding: "12px 16px",
             borderRadius:  "8px",
             marginBottom: "16px",
-            background: alertMsg.type === "success" ?  "rgba(34,197,94,0.15)" :
+            background: alertMsg.type === "success" ? "rgba(34,197,94,0.15)" :
                        alertMsg.type === "danger" ? "rgba(239,68,68,0.15)" :
-                       alertMsg.type === "info" ?  "rgba(96,165,250,0.15)" :
+                       alertMsg.type === "info" ? "rgba(96,165,250,0.15)" :
                        "rgba(245,158,11,0.15)",
             border: alertMsg.type === "success" ?  "1px solid rgba(34,197,94,0.3)" :
                     alertMsg.type === "danger" ? "1px solid rgba(239,68,68,0.3)" :
@@ -195,7 +219,7 @@ const AbsensiForm = () => {
                    alertMsg.type === "info" ?  "#60a5fa" :
                    "#f59e0b"
           }}>
-            {alertMsg.message} {/* ✅ GANTI */}
+            {alertMsg.message}
           </div>
         )}
 
