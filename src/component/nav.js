@@ -69,7 +69,7 @@ const Navbar = () => {
               </NavLink>
             </li>
             {/* ✅ Menu Admin QR - Untuk admin generate QR */}
-            {/* <li className="nav-item">
+            <li className="nav-item">
               <NavLink
                 to="/barcode"
                 className={({ isActive }) =>
@@ -79,7 +79,7 @@ const Navbar = () => {
                 <span className="me-1">⚙️</span>
                 Admin QR
               </NavLink>
-            </li> */}
+            </li>
           </ul>
         </div>
       </div>
