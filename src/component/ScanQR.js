@@ -15,16 +15,10 @@ const ScanQR = () => {
   const processingRef = useRef(false);
 
   useEffect(() => {
-    if (isInitialized.current) {
-      return;
-    }
+    if (isInitialized.current) return;
     isInitialized.current = true;
-
     startScanner();
-
-    return () => {
-      stopScanner();
-    };
+    return () => stopScanner();
   }, []);
 
   const startScanner = async () => {
@@ -34,36 +28,29 @@ const ScanQR = () => {
         return;
       }
 
-      console.log("🚀 Starting scanner..  .");
+      console.log("🚀 Starting scanner...");
       
       const readerElement = document.getElementById("qr-reader");
-      if (readerElement) {
-        readerElement.innerHTML = "";
-      }
+      if (readerElement) readerElement.innerHTML = "";
 
       const html5QrCode = new Html5Qrcode("qr-reader");
       scannerRef.current = html5QrCode;
 
       await html5QrCode.start(
         { facingMode: "environment" },
-        {
-          fps: 10,
-          qrbox: { width: 250, height: 250 },
-          aspectRatio: 1.0,
-        },
+        { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 },
         onScanSuccess,
-        onScanError
+        () => {} // Silent error
       );
 
       setScanning(true);
       setMessage("📷 Arahkan kamera ke QR Code");
       setMessageType("info");
-      
-      console.log("✅ Scanner started successfully");
+      console.log("✅ Scanner started");
       
     } catch (error) {
       console.error("❌ Scanner error:", error);
-      setMessage("❌ Gagal memulai kamera:   " + error.message);
+      setMessage("❌ Gagal memulai kamera:  " + error.message);
       setMessageType("error");
     }
   };
@@ -73,19 +60,13 @@ const ScanQR = () => {
       try {
         console.log("🛑 Stopping scanner...");
         const state = scannerRef.current.getState();
-        
-        if (state === 2) {
-          await scannerRef.current.stop();
-        }
-        
+        if (state === 2) await scannerRef.current.stop();
         await scannerRef.current.clear();
         scannerRef.current = null;
         setScanning(false);
         
         const readerElement = document.getElementById("qr-reader");
-        if (readerElement) {
-          readerElement.innerHTML = "";
-        }
+        if (readerElement) readerElement.innerHTML = "";
         
         console.log("✅ Scanner stopped");
       } catch (err) {
@@ -98,49 +79,48 @@ const ScanQR = () => {
 
   const onScanSuccess = (decodedText) => {
     if (processingRef.current || decodedText === lastScan) {
-      console.log("⚠️ Duplicate scan, ignoring");
+      console.log("⚠️ Duplicate, ignoring");
       return;
     }
 
-    processingRef.current = true;
+    processingRef. current = true;
     setLastScan(decodedText);
 
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    console.log("🎯 QR CODE DETECTED!");
-    console.log("Raw data:", decodedText);
+    console.log("🎯 QR DETECTED!");
+    console.log("Raw:", decodedText);
     console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
     stopScanner();
 
     try {
-      const qrData = JSON.parse(decodedText.  trim());
+      const qrData = JSON.parse(decodedText.trim());
       console.log("✅ Parsed:", qrData);
 
-      if (!  qrData.sessionId) {
-        throw new Error("sessionId tidak ditemukan dalam QR");
+      if (!qrData.sessionId) {
+        throw new Error("sessionId not found");
       }
 
-      // ✅ NAVIGATE KE FORM
-      const targetUrl = `/absensi? session=${qrData.sessionId}`;
+      // ✅ NO SPACES IN URL
+      const targetUrl = `/absensi?session=${qrData.sessionId}`;
       
       console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-      console.log("🚀 NAVIGATING TO:", targetUrl);
-      console.log("Session ID:", qrData.  sessionId);
+      console.log("🚀 NAVIGATE TO:", targetUrl);
+      console.log("Session ID:", qrData.sessionId);
       console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
-      setMessage("✅ QR Valid! Membuka form absensi..  .");
+      setMessage("✅ QR Valid! Loading form...");
       setMessageType("success");
 
-      // ✅ Navigate dengan delay yang lebih pendek
       setTimeout(() => {
-        console.log("🔗 Executing navigate()");
-        navigate(targetUrl, { replace: true }); // ✅ Tambah replace:  true
-        console.log("✅ Navigate called");
-      }, 300); // ✅ Kurangi delay dari 500ms ke 300ms
+        console.log("🔗 Navigating.. .");
+        navigate(targetUrl, { replace: true });
+        console.log("✅ Navigate done");
+      }, 300);
 
     } catch (error) {
-      console.error("❌ Processing error:", error);
-      setMessage("⚠️ QR tidak valid:   " + error.message);
+      console.error("❌ Error:", error);
+      setMessage("⚠️ Invalid QR: " + error.message);
       setMessageType("error");
       
       setTimeout(() => {
@@ -150,10 +130,6 @@ const ScanQR = () => {
         startScanner();
       }, 2000);
     }
-  };
-
-  const onScanError = (errorMessage) => {
-    // Silent
   };
 
   const handleRetry = () => {
@@ -169,109 +145,61 @@ const ScanQR = () => {
       <div className="scan-container">
         <div className="scan-header">
           <h1 className="scan-title">📱 Scan QR Absensi</h1>
-          <p className="scan-subtitle">Arahkan kamera ke QR Code dari admin</p>
+          <p className="scan-subtitle">Arahkan kamera ke QR Code</p>
         </div>
 
         <div className="qr-reader-wrapper">
-          <div 
-            id="qr-reader" 
-            style={{ 
-              width: "100%",
-              minHeight: "300px"
-            }}
-          ></div>
+          <div id="qr-reader" style={{ width: "100%", minHeight: "300px" }}></div>
           
           {scanning && (
             <div style={{
-              marginTop: "12px",
-              padding: "12px",
-              background: "rgba(34, 197, 94, 0.1)",
-              border: "1px solid rgba(34, 197, 94, 0.3)",
-              borderRadius: "8px",
-              textAlign: "center",
-              color: "#22c55e",
-              fontSize: "14px",
-              fontWeight: "600"
+              marginTop: "12px", padding: "12px",
+              background: "rgba(34,197,94,0.1)",
+              border: "1px solid rgba(34,197,94,0.3)",
+              borderRadius: "8px", textAlign: "center",
+              color: "#22c55e", fontSize: "14px", fontWeight: "600"
             }}>
-              🟢 Scanner Aktif - Mencari QR Code...  
+              🟢 Scanner Aktif
             </div>
           )}
         </div>
 
         {message && (
-          <div 
-            className={`scan-message ${messageType}`} 
-            style={{
-              padding: "16px",
-              marginTop: "16px",
-              borderRadius: "8px",
-              textAlign: "center",
-              background: messageType === "success" ? "rgba(34,197,94,0.15)" :
-                         messageType === "error" ? "rgba(239,68,68,0.15)" :
-                         "rgba(96,165,250,0.15)",
-              border: messageType === "success" ?   "1px solid rgba(34,197,94,0.3)" :
-                      messageType === "error" ? "1px solid rgba(239,68,68,0.3)" :
-                      "1px solid rgba(96,165,250,0.3)",
-              color: messageType === "success" ? "#22c55e" :   
-                     messageType === "error" ? "#ef4444" :  
-                     "#60a5fa",
-              fontWeight: "600"
-            }}
-          >
+          <div style={{
+            padding: "16px", marginTop: "16px", borderRadius: "8px",
+            textAlign: "center",
+            background: messageType === "success" ? "rgba(34,197,94,0.15)" :
+                       messageType === "error" ? "rgba(239,68,68,0.15)" :
+                       "rgba(96,165,250,0.15)",
+            border: messageType === "success" ? "1px solid rgba(34,197,94,0.3)" :
+                    messageType === "error" ? "1px solid rgba(239,68,68,0.3)" :
+                    "1px solid rgba(96,165,250,0.3)",
+            color: messageType === "success" ? "#22c55e" :
+                   messageType === "error" ? "#ef4444" :  "#60a5fa",
+            fontWeight: "600"
+          }}>
             {message}
           </div>
         )}
 
-        <div style={{
-          marginTop: "16px",
-          padding: "12px",
-          background: "rgba(96, 165, 250, 0.1)",
-          border: "1px solid rgba(96, 165, 250, 0.3)",
-          borderRadius: "8px",
-          fontSize: "13px",
-          color: "#93c5fd"
-        }}>
-          <div style={{ fontWeight: "bold", marginBottom: "8px" }}>💡 Tips Scan:  </div>
-          <ul style={{ margin: 0, paddingLeft: "20px", lineHeight: "1.6" }}>
-            <li>Jaga jarak 15-30 cm dari QR</li>
-            <li>Pastikan pencahayaan cukup terang</li>
-            <li>Tahan HP steady (jangan goyang)</li>
-            <li>Pastikan QR Code masuk dalam kotak scan</li>
-          </ul>
-        </div>
-
         <div style={{ marginTop: "16px", display: "flex", gap: "12px" }}>
-          {!  scanning && (
-            <button 
-              onClick={handleRetry}
-              style={{
-                flex: 1,
-                padding:   "12px",
-                borderRadius: "8px",
-                border: "1px solid rgba(34, 197, 94, 0.5)",
-                background: "rgba(34, 197, 94, 0.1)",
-                color: "#22c55e",
-                cursor: "pointer",
-                fontWeight: "600"
-              }}
-            >
+          {! scanning && (
+            <button onClick={handleRetry} style={{
+              flex: 1, padding: "12px", borderRadius: "8px",
+              border: "1px solid rgba(34,197,94,0.5)",
+              background: "rgba(34,197,94,0.1)",
+              color: "#22c55e", cursor: "pointer", fontWeight: "600"
+            }}>
               🔄 Scan Ulang
             </button>
           )}
           
-          <button 
-            onClick={() => navigate("/")}
-            style={{
-              flex: 1,
-              padding: "12px",
-              borderRadius: "8px",
-              border: "1px solid rgba(255, 255, 255, 0.2)",
-              background: "rgba(255, 255, 255, 0.1)",
-              color: "#e8eeff",
-              cursor: "pointer",
-              fontWeight: "600"
-            }}
-          >
+          <button onClick={() => navigate("/")} style={{
+            flex:  1, padding: "12px", borderRadius: "8px",
+            border: "1px solid rgba(255,255,255,0.2)",
+            background: "rgba(255,255,255,0.1)",
+            color: "#e8eeff", cursor: "pointer", fontWeight: "600"
+          }}>
             ← Kembali
           </button>
         </div>
