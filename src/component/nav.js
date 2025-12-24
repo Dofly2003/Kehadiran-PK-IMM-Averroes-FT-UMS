@@ -40,7 +40,7 @@ const Navbar = () => {
               <NavLink
                 to="/"
                 className={({ isActive }) =>
-                  "nav-link app-nav-link " + (isActive ? "active" : "")
+                  "nav-link app-nav-link " + (isActive ? "active" :  "")
                 }
               >
                 Absensi Hari Ini
@@ -56,6 +56,30 @@ const Navbar = () => {
                 Log Absensi
               </NavLink>
             </li>
+            {/* ✅ Menu Scan QR - Untuk user melakukan absensi */}
+            <li className="nav-item">
+              <NavLink
+                to="/scan"
+                className={({ isActive }) =>
+                  "nav-link app-nav-link " + (isActive ? "active" : "")
+                }
+              >
+                <span className="me-1">📷</span>
+                Scan QR
+              </NavLink>
+            </li>
+            {/* ✅ Menu Admin QR - Untuk admin generate QR */}
+            {/* <li className="nav-item">
+              <NavLink
+                to="/barcode"
+                className={({ isActive }) =>
+                  "nav-link app-nav-link " + (isActive ? "active" : "")
+                }
+              >
+                <span className="me-1">⚙️</span>
+                Admin QR
+              </NavLink>
+            </li> */}
           </ul>
         </div>
       </div>

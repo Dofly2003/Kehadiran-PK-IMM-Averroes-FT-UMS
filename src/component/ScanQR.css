@@ -1,0 +1,112 @@
+/* src/components/ScanQR.css */
+.scan-page {
+  min-height: 100vh;
+  background:  linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.scan-container {
+  background: white;
+  border-radius: 20px;
+  padding: 30px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.scan-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.scan-title {
+  font-size: 28px;
+  font-weight:  700;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.scan-subtitle {
+  color: #666;
+  font-size: 14px;
+}
+
+/* ✅ Pastikan hanya 1 video muncul */
+.qr-reader-wrapper {
+  border-radius: 15px;
+  overflow: hidden;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+#qr-reader {
+  width: 100%;
+  border: none;
+}
+
+/* ✅ Sembunyikan video duplikat jika ada */
+#qr-reader video {
+  width: 100% !important;
+  border-radius: 15px;
+}
+
+#qr-reader canvas {
+  display: none; /* ✅ Sembunyikan canvas overlay jika tidak perlu */
+}
+
+/* ✅ Hanya tampilkan 1 video element */
+#qr-reader > div: first-child {
+  display:  block ! important;
+}
+
+#qr-reader > div:not(:first-child) {
+  display: none !important;
+}
+
+. scan-message {
+  background:  #e3f2fd;
+  color: #1976d2;
+  padding: 15px;
+  border-radius: 10px;
+  text-align: center;
+  font-weight: 500;
+  margin-bottom: 20px;
+}
+
+.scan-message.error {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.error-help {
+  background: #fff3e0;
+  border: 1px solid #ff9800;
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.error-help ul {
+  margin: 10px 0 0 20px;
+  font-size: 14px;
+}
+
+.btn-back {
+  width: 100%;
+  padding:  12px;
+  background:  #6c757d;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.btn-back:hover {
+  background:  #5a6268;
+}
