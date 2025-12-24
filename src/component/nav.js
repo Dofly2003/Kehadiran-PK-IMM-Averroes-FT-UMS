@@ -24,6 +24,7 @@ const Navbar = () => {
           <span className="navbar-toggler-icon" />
         </button>
 
+        {/* ✅ Collapse akan mendorong konten di bawah */}
         <div className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav ms-auto align-items-lg-center gap-lg-1">
             <li className="nav-item">
@@ -50,16 +51,15 @@ const Navbar = () => {
               <NavLink
                 to="/log-absen"
                 className={({ isActive }) =>
-                  "nav-link app-nav-link " + (isActive ? "active" : "")
+                  "nav-link app-nav-link " + (isActive ? "active" :  "")
                 }
               >
                 Log Absensi
               </NavLink>
             </li>
-            {/* ✅ Menu Scan QR - Untuk user melakukan absensi */}
             <li className="nav-item">
               <NavLink
-                to="/scan"
+                to="/scan-qr"
                 className={({ isActive }) =>
                   "nav-link app-nav-link " + (isActive ? "active" : "")
                 }
@@ -68,18 +68,17 @@ const Navbar = () => {
                 Scan QR
               </NavLink>
             </li>
-            {/* ✅ Menu Admin QR - Untuk admin generate QR */}
-            {/* <li className="nav-item">
+            <li className="nav-item">
               <NavLink
-                to="/barcode"
+                to="/admin-qr"
                 className={({ isActive }) =>
                   "nav-link app-nav-link " + (isActive ? "active" : "")
                 }
               >
-                <span className="me-1">⚙️</span>
+                <span className="me-1">🔐</span>
                 Admin QR
               </NavLink>
-            </li> */}
+            </li>
           </ul>
         </div>
       </div>
