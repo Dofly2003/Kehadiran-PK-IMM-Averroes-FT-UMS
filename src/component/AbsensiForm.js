@@ -59,75 +59,78 @@ const AbsensiForm = () => {
     return () => unsubscribe();
   }, [sessionValid]);
 
-  const validateSession = async () => {
-    console.log("🔍 Validating session...");
-    
-    if (!sessionId) {
-      console.error("❌ No session ID");
-      showAlert("danger", "Session tidak valid");
-      setValidating(false);
+// Ganti bagian validateSession dengan ini: 
+
+const validateSession = async () => {
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  console.log("🔍 VALIDATE SESSION CALLED");
+  console.log("Session ID:", sessionId);
+  console.log("SKIP_VALIDATION:", SKIP_VALIDATION);
+  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+  
+  if (! sessionId) {
+    console.error("❌ No session ID");
+    alert("ERROR: No session ID in URL!");
+    showAlert("danger", "Session tidak valid");
+    setValidating(false);
+    setTimeout(() => navigate("/scan"), 2000);
+    return;
+  }
+
+  try {
+    // ✅ FORCE SKIP VALIDATION
+    if (SKIP_VALIDATION) {
+      console.warn("⚠️⚠️⚠️ VALIDATION SKIPPED ⚠️⚠️⚠️");
+      alert("DEBUG: Validation skipped!\nSession ID: " + sessionId. substring(0, 20));
       
+      setSessionValid(true);
+      setSessionInfo({
+        valid: true,
+        remainingTime: 30,
+        message: "DEBUG: Validation bypassed"
+      });
+      setValidating(false);
+      return; // ✅ STOP HERE
+    }
+
+    // Normal validation (tidak akan sampai sini jika SKIP_VALIDATION = true)
+    console.log("🔍 Calling validateQRSession().. .");
+    const validation = await validateQRSession(sessionId);
+    
+    console.log("📊 Result:", validation);
+
+    if (validation.isSystemError) {
+      showAlert("danger", validation.message);
+      setValidating(false);
+      return;
+    }
+
+    if (validation.expired) {
+      showAlert("warning", validation.message);
+      setValidating(false);
+      setTimeout(() => navigate("/scan"), 3000);
+      return;
+    }
+
+    if (! validation.valid) {
+      showAlert("danger", validation.message);
+      setValidating(false);
       setTimeout(() => navigate("/scan"), 2000);
       return;
     }
 
-    try {
-      // ✅ SKIP VALIDATION untuk debugging
-      if (SKIP_VALIDATION) {
-        console.warn("⚠️⚠️⚠️ SKIPPING VALIDATION (DEBUG MODE) ⚠️⚠️⚠️");
-        console.log("Session ID accepted without validation:", sessionId);
-        
-        setSessionValid(true);
-        setSessionInfo({
-          valid: true,
-          remainingTime: 30,
-          message: "DEBUG:  Validation bypassed"
-        });
-        setValidating(false);
-        return;
-      }
+    setSessionValid(true);
+    setSessionInfo(validation);
+    setValidating(false);
 
-      // Normal validation
-      console.log("🔍 Calling validateQRSession()...");
-      const validation = await validateQRSession(sessionId);
-      
-      console.log("📊 Validation result:", validation);
-
-      if (validation.isSystemError) {
-        console.error("❌ System error");
-        showAlert("danger", validation.message);
-        setValidating(false);
-        return;
-      }
-
-      if (validation.expired) {
-        console.warn("⚠️ Expired");
-        showAlert("warning", validation.message);
-        setValidating(false);
-        setTimeout(() => navigate("/scan"), 3000);
-        return;
-      }
-
-      if (! validation.valid) {
-        console.error("❌ Invalid");
-        showAlert("danger", validation.message);
-        setValidating(false);
-        setTimeout(() => navigate("/scan"), 2000);
-        return;
-      }
-
-      console.log("✅ Valid!");
-      setSessionValid(true);
-      setSessionInfo(validation);
-      setValidating(false);
-
-    } catch (error) {
-      console.error("❌ Validation error:", error);
-      showAlert("danger", "Error:  " + error.message);
-      setValidating(false);
-      setTimeout(() => navigate("/scan"), 2000);
-    }
-  };
+  } catch (error) {
+    console.error("❌ Error:", error);
+    alert("EXCEPTION: " + error.message);
+    showAlert("danger", "Error:   " + error.message);
+    setValidating(false);
+    setTimeout(() => navigate("/scan"), 2000);
+  }
+};
 
   const filteredUsers = Object.entries(users).filter(([uid, user]) => {
     if (! inputNama. trim()) return false;
