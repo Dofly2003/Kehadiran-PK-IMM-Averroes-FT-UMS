@@ -1,18 +1,19 @@
 :root {
   /* Tema warna */
   --bg-start: #071a2c;
-  --bg-end: #1b1033;
+  --bg-end:  #1b1033;
   --accent-blue: #60a5fa;
   --accent-green: #22c55e;
   --accent-red: #ef4444;
   --accent-amber: #f59e0b;
+  --accent-purple: #a78bfa;
 
-  --glass: rgba(255, 255, 255, 0.06);
+  --glass:  rgba(255, 255, 255, 0.06);
   --glass-border: rgba(255, 255, 255, 0.14);
-  --text: #e8eeff;
+  --text:  #e8eeff;
   --muted: #a7b3e6;
 
-  --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  --shadow:  0 10px 30px rgba(0, 0, 0, 0.35);
   --radius: 16px;
   --radius-sm: 10px;
 }
@@ -33,20 +34,26 @@
   max-width: 1100px;
   margin: 0 auto 12px auto;
   display: flex;
-  align-items: flex-end;
-  gap: 16px;
+  align-items: center;
+  gap: 20px;
   flex-wrap: wrap;
+  justify-content: space-between;
 }
-.title-wrap { flex: 1 1 auto; }
+
+.title-wrap { 
+  flex: 1 1 auto; 
+}
+
 .badge-soft {
   display: inline-block;
   font-size: .78rem;
   padding: 4px 10px;
-  border-radius: 999px;
+  border-radius:  999px;
   color: #c7d2fe;
   background: rgba(99,102,241,.18);
   border: 1px solid rgba(99,102,241,.25);
 }
+
 .page-title {
   margin: 8px 0 4px;
   font-weight: 800;
@@ -56,8 +63,54 @@
   background-clip: text;
   color: transparent;
 }
-.page-subtitle { margin: 0; color: var(--muted); }
-.header-actions { display: flex; gap: 10px; }
+
+.page-subtitle { 
+  margin: 0; 
+  color: var(--muted); 
+}
+
+/* ✅ Icon Kamera di Tengah */
+.header-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-camera-scan {
+  width: 64px;
+  height: 64px;
+  border-radius:  50%;
+  border: 2px solid rgba(167,139,250,.5);
+  background: linear-gradient(135deg, rgba(167,139,250,.15), rgba(99,102,241,.1));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  font-size: 32px;
+  cursor: pointer;
+  transition: all .3s ease;
+  box-shadow: 0 8px 24px rgba(167,139,250,.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-camera-scan:hover {
+  transform: scale(1.1) rotate(5deg);
+  border-color: rgba(167,139,250,.8);
+  background: linear-gradient(135deg, rgba(167,139,250,.25), rgba(99,102,241,.15));
+  box-shadow: 0 12px 32px rgba(167,139,250,.35);
+}
+
+.btn-camera-scan:active {
+  transform: scale(0.95);
+}
+
+/* Header Actions */
+.header-actions { 
+  display: flex; 
+  gap: 10px; 
+  flex-wrap:  wrap;
+  align-items: center;
+}
 
 /* ===== STATS ===== */
 .stats {
@@ -67,6 +120,7 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
+
 .stat-card {
   border-radius: var(--radius);
   background: linear-gradient(120deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
@@ -76,10 +130,24 @@
   display: grid;
   gap: 4px;
 }
-.stat-label { color: var(--muted); font-size: 0.9rem; }
-.stat-value { font-size: 1.6rem; font-weight: 800; }
-.stat-green { outline: 1px solid rgba(34,197,94,.35); }
-.stat-red { outline: 1px solid rgba(239,68,68,.35); }
+
+.stat-label { 
+  color: var(--muted); 
+  font-size: 0.9rem; 
+}
+
+.stat-value { 
+  font-size: 1.6rem; 
+  font-weight: 800; 
+}
+
+.stat-green { 
+  outline: 1px solid rgba(34,197,94,.35); 
+}
+
+.stat-red { 
+  outline: 1px solid rgba(239,68,68,.35); 
+}
 
 /* ===== GRID SECTION ===== */
 .grid-2 {
@@ -113,103 +181,350 @@
   padding: 14px 16px;
   font-weight: 700;
 }
-.section-header.green { background: linear-gradient(90deg, rgba(34,197,94,.12), transparent); }
-.section-header.red { background: linear-gradient(90deg, rgba(239,68,68,.12), transparent); }
+
+.section-header.green { 
+  background: linear-gradient(90deg, rgba(34,197,94,.12), transparent); 
+}
+
+.section-header.red { 
+  background: linear-gradient(90deg, rgba(239,68,68,.12), transparent); 
+}
 
 .dot {
-  width: 10px; height: 10px; border-radius: 999px;
+  width: 10px; 
+  height: 10px; 
+  border-radius:  999px;
   box-shadow: 0 0 0 4px rgba(255,255,255,.05);
 }
-.dot.green { background: var(--accent-green); }
-.dot.red { background: var(--accent-red); }
+
+.dot.green { 
+  background: var(--accent-green); 
+}
+
+.dot.red { 
+  background: var(--accent-red); 
+}
 
 .count-pill {
-  font-size: .8rem; padding: 6px 10px; border-radius: 999px;
-  border: 1px solid var(--glass-border); background: rgba(255,255,255,.06);
+  font-size: .8rem; 
+  padding: 6px 10px; 
+  border-radius: 999px;
+  border: 1px solid var(--glass-border); 
+  background: rgba(255,255,255,.06);
 }
-.count-pill.green { color: #d1fae5; }
-.count-pill.red { color: #fee2e2; }
+
+.count-pill.green { 
+  color: #d1fae5; 
+}
+
+.count-pill.red { 
+  color: #fee2e2; 
+}
 
 /* ===== LIST TABLE ===== */
 .list-table {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 0;                  /* full-bleed agar baris selebar card */
-  flex: 1;
+  padding: 0;
+  flex:  1;
 }
 
 .list-row {
-  display: flex;               /* tetap ROW di semua ukuran */
+  display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;             /* boleh wrap bila sangat sempit */
+  flex-wrap: wrap;
   gap: 12px;
-  width: 100%;                 /* selebar card induk */
-  padding: 14px 16px;          /* samakan rasa padding dengan stat-card */
-  border: 1px solid rgba(255,255,255,.08);
-  border-radius: var(--radius);/* radius sama seperti card */
+  width: 100%;
+  padding: 14px 16px;
+  border:  1px solid rgba(255,255,255,.08);
+  border-radius: var(--radius);
   background: rgba(255,255,255,.03);
   transition: background .2s ease, border-color .2s ease, transform .05s ease;
 }
-.list-row:hover { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.14); }
-.list-row:active { transform: scale(.998); }
 
-/* gunakan .list-cell untuk SEMUA kolom */
+.list-row:hover { 
+  background: rgba(255,255,255,.06); 
+  border-color: rgba(255,255,255,.14); 
+}
+
+.list-row:active { 
+  transform: scale(.998); 
+}
+
 .list-cell {
-  flex: 1 1 33.333%;           /* tiga kolom bagi rata */
-  min-width: 0;                /* cegah overflow, biar ikut lebar card */
+  flex: 1 1 33.333%;
+  min-width: 0;
   display: grid;
   gap: 6px;
 }
+
 .list-label {
-  font-size: .78rem;
+  font-size:  .78rem;
   color: var(--muted);
   letter-spacing: .2px;
 }
+
 .list-value {
   font-size: .95rem;
   color: var(--text);
-  overflow-wrap: anywhere;     /* cegah meluber di layar kecil */
+  overflow-wrap: anywhere;
 }
+
 .mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   font-variant-numeric: tabular-nums;
 }
 
 /* ===== BUTTONS ===== */
-.btn { border-radius: var(--radius-sm); border-width: 1px; font-weight: 600; }
+.btn { 
+  border-radius: var(--radius-sm); 
+  border-width: 1px; 
+  font-weight: 600; 
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: transform .1s ease, box-shadow .2s ease;
+}
+
 .btn-gradient {
-  color: #0b1224; border: none;
+  color: #0b1224; 
+  border: none;
   background: linear-gradient(90deg, #60a5fa, #a78bfa, #fef08a);
   background-size: 200% 100%;
   transition: transform .1s ease, box-shadow .2s ease, background-position .6s ease;
-  padding: 8px 14px;
 }
-.btn-gradient:hover { transform: translateY(-1px); background-position: 100% 0; box-shadow: 0 10px 20px rgba(99,102,241,.25); }
+
+.btn-gradient:hover { 
+  transform: translateY(-1px); 
+  background-position: 100% 0; 
+  box-shadow: 0 10px 20px rgba(99,102,241,.25); 
+}
 
 /* ===== FOOTER ===== */
-.footer-note { max-width: 1100px; margin: 18px auto 0 auto; text-align: center; color: var(--muted); }
+.footer-note { 
+  max-width: 1100px; 
+  margin: 18px auto 0 auto; 
+  text-align: center; 
+  color: var(--muted); 
+}
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
-  .grid-2 { flex-direction: column; }
-  .grid-2 > .section-card { width: 100%; }  /* pastikan lebar penuh seperti stats */
-  .section-card { margin-bottom: 8px; }
-  .header-actions { width: 100%; }
-  .btn-gradient { width: 100%; }
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
 
-  /* Tetap row di mobile, bagi rata 3 kolom */
-  .list-row { flex-direction: row; align-items: center; }
-  .list-cell { flex: 1 1 33.333%; min-width: 0; }
+  .header-center {
+    order: -1;
+    width: 100%;
+    justify-content: center;
+    margin-bottom: 8px;
+  }
+
+  .header-actions { 
+    width: 100%; 
+  }
+
+  .header-actions .btn {
+    width: 100%;
+  }
+
+  .grid-2 { 
+    flex-direction: column; 
+  }
+
+  .grid-2 > .section-card { 
+    width: 100%; 
+  }
+
+  .section-card { 
+    margin-bottom: 8px; 
+  }
+
+  .list-row { 
+    flex-direction: row; 
+    align-items: center; 
+  }
+
+  .list-cell { 
+    flex:  1 1 33.333%; 
+    min-width: 0; 
+  }
 }
 
 @media (max-width: 480px) {
-  .stats { grid-template-columns: 1fr; }  /* stat-card jadi 1 kolom */
-  .page-title { font-size: 1.25rem; }
-  .stat-value { font-size: 1.4rem; }
+  .stats { 
+    grid-template-columns: 1fr; 
+  }
 
-  /* Sedikit kecilkan font agar tetap muat */
-  .list-label { font-size: .72rem; }
-  .list-value { font-size: .9rem; }
+  .page-title { 
+    font-size:  1.25rem; 
+  }
+
+  .stat-value { 
+    font-size:  1.4rem; 
+  }
+
+  .list-label { 
+    font-size:  .72rem; 
+  }
+
+  .list-value { 
+    font-size: .9rem; 
+  }
+
+  .btn-camera-scan {
+    width: 56px;
+    height: 56px;
+    font-size: 28px;
+  }
+}
+/* ... CSS sebelumnya tetap sama ...*/
+
+/* ✅ QR Icon Button - UKURAN LEBIH KECIL */
+.header-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-qr-icon {
+  width: 56px;           /* ✅ Dikecilkan dari 80px */
+  height: 56px;          /* ✅ Dikecilkan dari 80px */
+  border-radius: 12px;   /* ✅ Dikecilkan dari 16px */
+  border: 2px solid rgba(96,165,250,.4);
+  background:  linear-gradient(135deg, rgba(96,165,250,.08), rgba(99,102,241,.06));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  cursor: pointer;
+  transition: all .3s ease;
+  box-shadow: 0 6px 16px rgba(96,165,250,.15);  /* ✅ Shadow lebih kecil */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;          /* ✅ Padding lebih kecil */
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-qr-icon::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(135deg, rgba(96,165,250,.3), rgba(167,139,250,.3));
+  border-radius: 12px;   /* ✅ Sesuaikan dengan border-radius utama */
+  opacity: 0;
+  transition: opacity .3s ease;
+  z-index: -1;
+}
+
+.btn-qr-icon:hover {
+  transform: translateY(-3px) scale(1.05);  /* ✅ Hover movement lebih kecil */
+  border-color: rgba(96,165,250,.7);
+  background: linear-gradient(135deg, rgba(96,165,250,.15), rgba(99,102,241,.1));
+  box-shadow: 
+    0 10px 24px rgba(96,165,250,.25),
+    0 0 0 3px rgba(96,165,250,.1);         /* ✅ Ring lebih kecil */
+}
+
+.btn-qr-icon:hover::before {
+  opacity: 1;
+}
+
+.btn-qr-icon:active {
+  transform: translateY(-1px) scale(1.02);
+}
+
+.qr-icon-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(96,165,250,.3));
+  transition: filter .3s ease;
+}
+
+.btn-qr-icon:hover .qr-icon-img {
+  filter: drop-shadow(0 3px 10px rgba(96,165,250,.5));
+}
+
+/* ...CSS lainnya tetap sama ...*/
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .header-center {
+    order: -1;
+    width: 100%;
+    justify-content: center;
+    margin-bottom: 8px;
+  }
+
+  .header-actions { 
+    width: 100%; 
+  }
+
+  .header-actions .btn {
+    width: 100%;
+  }
+
+  .grid-2 { 
+    flex-direction: column; 
+  }
+
+  .grid-2 > .section-card { 
+    width: 100%; 
+  }
+
+  .section-card { 
+    margin-bottom: 8px; 
+  }
+
+  .list-row { 
+    flex-direction:  row; 
+    align-items: center; 
+  }
+
+  .list-cell { 
+    flex: 1 1 33.333%; 
+    min-width: 0; 
+  }
+}
+
+@media (max-width: 480px) {
+  .stats { 
+    grid-template-columns: 1fr; 
+  }
+
+  .page-title { 
+    font-size: 1.25rem; 
+  }
+
+  .stat-value { 
+    font-size: 1.4rem; 
+  }
+
+  .list-label { 
+    font-size:  .72rem; 
+  }
+
+  .list-value { 
+    font-size:  .9rem; 
+  }
+
+  /* ✅ Mobile:  Sedikit lebih kecil lagi */
+  .btn-qr-icon {
+    width:  48px;
+    height:  48px;
+  }
 }

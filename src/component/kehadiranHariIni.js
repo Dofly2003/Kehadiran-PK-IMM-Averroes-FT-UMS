@@ -1,23 +1,22 @@
 // src/components/AbsensiHariIni.js
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { db } from "../firebase";
 import { ref, onValue } from "firebase/database";
 import "bootstrap/dist/css/bootstrap.min.css";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
-// Pakai nama file CSS yang Anda kirim
 import "./AbsensiHariIni.css";
 
-// Helper: cari minggu ke berapa
 function getWeekOfMonth(day) {
   return "minggu-" + (Math.floor((day - 1) / 7) + 1);
 }
 
 const AbsensiHariIni = () => {
+  const navigate = useNavigate();
   const [users, setUsers] = useState({});
   const [absensiHariIni, setAbsensiHariIni] = useState({});
 
-  // Ambil info tanggal sekarang
   const now = new Date();
   const tahun = now.getFullYear();
   const bulan = String(now.getMonth() + 1).padStart(2, "0");
@@ -27,14 +26,12 @@ const AbsensiHariIni = () => {
   const todayPath = `absensi/${tahun}/${bulan}/${minggu}/${hari}`;
 
   useEffect(() => {
-    // Ambil data user
     const usersRef = ref(db, "users/terdaftar");
     onValue(usersRef, (snapshot) => {
       const val = snapshot.val();
       setUsers(val || {});
     });
 
-    // Ambil data absensi hari ini
     const absensiRef = ref(db, todayPath);
     onValue(absensiRef, (snapshot) => {
       const val = snapshot.val();
@@ -55,7 +52,6 @@ const AbsensiHariIni = () => {
     };
   });
 
-  // Sort by waktu terbaru (fallback jika waktu tidak valid)
   sudahHadir.sort((a, b) => {
     const ta = Date.parse(a.waktu) || 0;
     const tb = Date.parse(b.waktu) || 0;
@@ -66,33 +62,22 @@ const AbsensiHariIni = () => {
     .filter(([uid]) => !hadirUIDs.includes(uid))
     .map(([uid, user]) => ({
       uid,
-      nama: user.nama || "-",
+      nama:  user.nama || "-",
       prodi: user.prodi || user.nim || "-",
       bidang: user.bidang || "-",
     }));
 
-  // Ringkasan
   const totalSudah = sudahHadir.length;
   const totalBelum = belumHadir.length;
 
-  // Buat tanggal dari variabel tahun, bulan, hari
   const date = new Date(`${tahun}-${bulan}-${hari}`);
+  const hariList = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+  const namaHari = hariList[date. getDay()];
 
-  // Nama hari dalam bahasa Indonesia
-  const hariList = [
-    "Minggu",
-    "Senin",
-    "Selasa",
-    "Rabu",
-    "Kamis",
-    "Jumat",
-    "Sabtu",
-  ];
+  const handleScanQR = () => {
+    navigate('/scan');
+  };
 
-  // Ambil nama hari sesuai index dari getDay()
-  const namaHari = hariList[date.getDay()];
-
-  // === Export ke Excel ===
   const exportToExcel = () => {
     const workbook = XLSX.utils.book_new();
 
@@ -100,7 +85,7 @@ const AbsensiHariIni = () => {
       sudahHadir.map((row) => ({
         UID: row.uid,
         Nama: row.nama || "-",
-        Prodi: row.prodi || "-",
+        Prodi:  row.prodi || "-",
         Bidang: row.bidang || "-",
         Waktu: row.waktu || "-",
       }))
@@ -122,16 +107,15 @@ const AbsensiHariIni = () => {
       type: "array",
     });
     const data = new Blob([excelBuffer], { type: "application/octet-stream" });
-    saveAs(data, `Absensi_${tahun}-${bulan}-${hari}.xlsx`);
+    saveAs(data, `Absensi_${tahun}-${bulan}-${hari}. xlsx`);
   };
 
-  // Helper tampilkan hanya jam dari string "YYYY-MM-DD HH:mm:ss"
-  const onlyTime = (str) => (str && str.includes(" ") ? str.split(" ")[1] : str || "-");
+  const onlyTime = (str) => (str && str.includes(" ") ?  str.split(" ")[1] : str || "-");
 
   return (
     <div className="absensi-today-page">
       <div className="container-xl px-2 px-sm-3">
-        {/* Header */}
+        {/* ✅ Header dengan QR Icon */}
         <div className="page-header">
           <div className="title-wrap">
             <span className="badge-soft">Monitoring</span>
@@ -140,14 +124,34 @@ const AbsensiHariIni = () => {
               {namaHari}, {tahun}-{bulan}-{hari}
             </p>
           </div>
+
+          {/* ✅ QR Code Icon di Tengah */}
+          <div className="header-center">
+            <button 
+              className="btn-qr-icon" 
+              onClick={handleScanQR}
+              aria-label="Scan QR untuk absen"
+            >
+              <img 
+                src="/qr-icon.jpg" 
+                alt="Scan QR Code" 
+                className="qr-icon-img"
+              />
+            </button>
+          </div>
+
+          {/* Download Button */}
           <div className="header-actions">
-            <button className="btn btn-gradient w-100 w-sm-auto" onClick={exportToExcel}>
+            <button 
+              className="btn btn-gradient w-100 w-sm-auto" 
+              onClick={exportToExcel}
+            >
               📥 Download Excel
             </button>
           </div>
         </div>
 
-        {/* Stat cards */}
+        {/* Stats */}
         <div className="stats">
           <div className="stat-card stat-green">
             <div className="stat-label">Sudah Absen</div>
@@ -165,7 +169,7 @@ const AbsensiHariIni = () => {
             <div className="section-header green">
               <div className="dot green" />
               <h5 className="m-0">✔ Sudah Absen</h5>
-              <span className="count-pill green ms-auto">Total: {totalSudah}</span>
+              <span className="count-pill green ms-auto">Total:  {totalSudah}</span>
             </div>
             <div className="list-table">
               {sudahHadir.length === 0 ? (
@@ -206,11 +210,11 @@ const AbsensiHariIni = () => {
                   <div key={row.uid} className="list-row">
                     <div className="list-cell">
                       <div className="list-label">Nama</div>
-                      <div className="list-value fw-semibold">{row.nama || "-"}</div>
+                      <div className="list-value fw-semibold">{row. nama || "-"}</div>
                     </div>
                     <div className="list-cell">
                       <div className="list-label">Prodi</div>
-                      <div className="list-value mono">{row.prodi || "-"}</div>
+                      <div className="list-value mono">{row. prodi || "-"}</div>
                     </div>
                   </div>
                 ))
